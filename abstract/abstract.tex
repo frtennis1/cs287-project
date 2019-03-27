@@ -48,17 +48,16 @@ leverage these recent advances for low-resource machine translation.
     \item \cite{guzman2019two}
 \end{itemize}
 
-
-
-% TODO: bring in the two papers and find a third
-
 \section{Time}
 
 We have already signed up for Monday April 22.
 
 \section{Baseline}
 
-% TODO: this is the hardest thing we need to decide
+We will be using the same Nepali-English and Sinhala-English datasets as in \cite{guzman2019two}. Those languages are only spoken by less than 20 million people in Nepal and Sri Lanka respectively. They are categorized by small amount out-of-domain parallel data and large amount of monolingual data.
+
+With very limited supervised dataset ($\sim$ 500K sentences), the paper achieved BLEU scores of less than 8 for Nepali and Sinhala to English. With a combination of supervised translation data and monolingual data on the target side, BLEU scores increased to 15.1 for both. Finally, unsupervised learning generated BLEU score very close to 0. We intend to use those as baseline and improve upon them.
+
 
 \bibliographystyle{ecca}
 \bibliography{sources}
