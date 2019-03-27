@@ -24,20 +24,17 @@ cases, may lead to interpretable discrete latent codes. We are interested in
 using recent advances in vector-quantized variational autoencoding (VQ-VAE) to
 improve machine translation, particularly in low-resource settings. 
 
-VQ-VAE has
-been used \citep{kaiser2018fast} to speed up machine translation. VQ-VAE
-achieves this by compressing sentences into shorter discrete representations,
-which are then translated using a encoder--decoder framework (e.g. transformer).
-The speedup is provided since the variational encoding and decoding parts are
-parallelizable. We anticipate that VQ-VAE may also be helpful in low-resource
-settings, since variational autoencoding is unsupervised. In particular, recent
-advances in VQ-VAE has shown that it can style transfer audio into being spoken
-by different
-speakers, in a fully unsupervised manner \citep{van2017neural}. Speaker style
-transfer is a task that
-bears some similarities to translation, and we hope to
-leverage these recent advances for low-resource machine translation.
-% TODO: write up area
+VQ-VAE has been used \citep{kaiser2018fast} to speed up machine translation.
+VQ-VAE achieves this by compressing sentences into shorter discrete
+representations, which are then translated using a encoder--decoder framework
+(e.g. transformer). The speedup is provided since the variational encoding and
+decoding parts are parallelizable. We anticipate that VQ-VAE may also be helpful
+in low-resource settings, since variational autoencoding is unsupervised. In
+particular, recent advances in VQ-VAE has shown that it can style transfer audio
+into being spoken by different speakers, in a fully unsupervised manner
+\citep{van2017neural}. Speaker style transfer is a task that bears some
+similarities to translation, and we hope to leverage these recent advances for
+low-resource machine translation.% TODO: write up area
 
 \section{Papers}
 \begin{itemize}
