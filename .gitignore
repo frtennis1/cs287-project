@@ -5,3 +5,5 @@
 *bbl
 *blg
 *out
+.ipynb_checkpoints/*
+glue_data/*
