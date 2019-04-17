@@ -868,7 +868,7 @@ def main():
                 total_period_loss += loss.item()
 
                 if counter % args.report_frequency == 1:
-                    writer_callback(counter, args.report_frequency, total_period_loss, tb_writer, args.run_name)
+                    writer_callback(counter, total_period_loss / args.report_frequency, tb_writer, args.run_name)
 
                 nb_tr_examples += input_ids.size(0)
                 nb_tr_steps += 1
