@@ -15,4 +15,5 @@ python repo/run_classifier.py \
   --num_train_epochs 3.0 \
   --output_dir $OUTPUT_DIR\
   --report_frequency 10\
-  --run_name "BERT_test"
+  --run_name "BERT_test"\
+  --tensorboard_log_dir "repo/tensorboard_data"

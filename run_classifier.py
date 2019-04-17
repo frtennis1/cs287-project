@@ -570,6 +570,7 @@ def compute_metrics(task_name, preds, labels):
 
 def writer_callback(counter, period_loss, tb_writer, run_name, *args):
     """Use tb_writer to write counter and total_period_loss"""
+    print("Writing to tensorboard")
     tb_writer.add_scalar(f"{run_name}/training_error", period_loss, counter)
     callback(counter, period_loss, tb_writer, run_name, *args)
 
