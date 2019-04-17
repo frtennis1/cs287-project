@@ -2,7 +2,7 @@ export GLUE_DIR=repo/glue_data
 export TASK_NAME=SST-2
 export OUTPUT_DIR=repo/output/
 
-python run_classifier.py \
+python repo/run_classifier.py \
   --task_name $TASK_NAME \
   --do_train \
   --do_eval \
