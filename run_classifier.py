@@ -835,6 +835,7 @@ def main():
 
         counter = 0
         total_period_loss = 0
+        print("Reporting every " + str(args.report_frequency) + " batches...")
         for _ in trange(int(args.num_train_epochs), desc="Epoch"):
             tr_loss = 0
             nb_tr_examples, nb_tr_steps = 0, 0
@@ -867,9 +868,9 @@ def main():
                 # Log to tensorboard
                 counter += 1
                 total_period_loss += loss.item()
-
                 if counter % args.report_frequency == 1:
                     writer_callback(counter, total_period_loss / args.report_frequency, tb_writer, args.run_name)
+                    total_period_loss = 0
 
                 nb_tr_examples += input_ids.size(0)
                 nb_tr_steps += 1
