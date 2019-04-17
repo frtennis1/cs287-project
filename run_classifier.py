@@ -570,7 +570,6 @@ def compute_metrics(task_name, preds, labels):
 
 def writer_callback(counter, period_loss, tb_writer, run_name, *args):
     """Use tb_writer to write counter and total_period_loss"""
-    print("Writing to tensorboard")
     tb_writer.add_scalar(f"{run_name}/training_error", period_loss, counter)
     callback(counter, period_loss, tb_writer, run_name, *args)
 
@@ -868,7 +867,7 @@ def main():
                 # Log to tensorboard
                 counter += 1
                 total_period_loss += loss.item()
-                if counter % args.report_frequency == 1:
+                if counter % args.report_frequency == 1 and counter > args.report_frequency:
                     writer_callback(counter, total_period_loss / args.report_frequency, tb_writer, args.run_name)
                     total_period_loss = 0
 
