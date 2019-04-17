@@ -1,0 +1,2 @@
+def callback(*args):
+    pass

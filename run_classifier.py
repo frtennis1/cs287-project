@@ -40,6 +40,10 @@ from pytorch_pretrained_bert.modeling import BertForSequenceClassification, Bert
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 from pytorch_pretrained_bert.optimization import BertAdam, warmup_linear
 
+from tensorboardX import SummaryWriter
+
+from callback import callback
+
 logging.basicConfig(format = '%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt = '%m/%d/%Y %H:%M:%S',
                     level = logging.INFO)
@@ -319,7 +323,7 @@ class QnliProcessor(DataProcessor):
     def get_dev_examples(self, data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "dev.tsv")), 
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")),
             "dev_matched")
 
     def get_labels(self):
@@ -564,6 +568,12 @@ def compute_metrics(task_name, preds, labels):
         raise KeyError(task_name)
 
 
+def writer_callback(counter, period_loss, tb_writer, run_name, *args):
+    """Use tb_writer to write counter and total_period_loss"""
+    tb_writer.add_scalar(f"{run_name}/training_error", period_loss, counter)
+    callback(counter, period_loss, tb_writer, run_name, *args)
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -654,6 +664,9 @@ def main():
                              "Positive power of 2: static loss scaling value.\n")
     parser.add_argument('--server_ip', type=str, default='', help="Can be used for distant debugging.")
     parser.add_argument('--server_port', type=str, default='', help="Can be used for distant debugging.")
+    parser.add_argument('--report_frequency', type=int, default=500, help="Number of epochs to call callback")
+    parser.add_argument('--tensorboard_log_dir', type=str, default="~/repo/tensorboard_data", help="log_dir for tensorboard")
+    parser.add_argument("--run_name", type=str, default="BERT", help="Name of the run for tensorboard display")
     args = parser.parse_args()
 
     if args.server_ip and args.server_port:
@@ -687,6 +700,8 @@ def main():
         "rte": "classification",
         "wnli": "classification",
     }
+
+    tb_writer = SummaryWriter(log_dir=args.tensorboard_log_dir)
 
     if args.local_rank == -1 or args.no_cuda:
         device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
@@ -816,6 +831,9 @@ def main():
         train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size)
 
         model.train()
+
+        counter = 0
+        total_period_loss = 0
         for _ in trange(int(args.num_train_epochs), desc="Epoch"):
             tr_loss = 0
             nb_tr_examples, nb_tr_steps = 0, 0
@@ -844,6 +862,14 @@ def main():
                     loss.backward()
 
                 tr_loss += loss.item()
+
+                # Log to tensorboard
+                counter += 1
+                total_period_loss += loss.item()
+
+                if counter % args.report_frequency == 1:
+                    writer_callback(counter, args.report_frequency, total_period_loss, tb_writer, args.run_name)
+
                 nb_tr_examples += input_ids.size(0)
                 nb_tr_steps += 1
                 if (step + 1) % args.gradient_accumulation_steps == 0:
@@ -856,6 +882,10 @@ def main():
                     optimizer.step()
                     optimizer.zero_grad()
                     global_step += 1
+
+
+
+
 
         # Save a trained model and the associated configuration
         model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
@@ -915,7 +945,7 @@ def main():
             elif output_mode == "regression":
                 loss_fct = MSELoss()
                 tmp_eval_loss = loss_fct(logits.view(-1), label_ids.view(-1))
-            
+
             eval_loss += tmp_eval_loss.mean().item()
             nb_eval_steps += 1
             if len(preds) == 0:
@@ -983,10 +1013,10 @@ def main():
 
                 with torch.no_grad():
                     logits = model(input_ids, segment_ids, input_mask, labels=None)
-            
+
                 loss_fct = CrossEntropyLoss()
                 tmp_eval_loss = loss_fct(logits.view(-1, num_labels), label_ids.view(-1))
-            
+
                 eval_loss += tmp_eval_loss.mean().item()
                 nb_eval_steps += 1
                 if len(preds) == 0:
@@ -1011,6 +1041,8 @@ def main():
                 for key in sorted(result.keys()):
                     logger.info("  %s = %s", key, str(result[key]))
                     writer.write("%s = %s\n" % (key, str(result[key])))
+
+    tb_writer.close()
 
 if __name__ == "__main__":
     main()
