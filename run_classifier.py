@@ -905,7 +905,7 @@ def main():
         model.load_state_dict(torch.load(output_model_file))
     else:
         with open(args.config_file, 'r') as f:
-            config = json.load(f)
+            config = BertConfig(json.load(f))
 
         model = BertForSequenceClassification(config, num_labels=num_labels)
         model.load_state_dict(torch.load(args.model_file))
