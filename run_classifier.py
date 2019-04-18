@@ -23,7 +23,6 @@ import logging
 import os
 import random
 import sys
-import json
 
 import numpy as np
 import torch
@@ -904,8 +903,7 @@ def main():
         model = BertForSequenceClassification(config, num_labels=num_labels)
         model.load_state_dict(torch.load(output_model_file))
     else:
-        with open(args.config_file, 'r') as f:
-            config = BertConfig(json.load(f))
+        config = BertConfig(args.config_file)
 
         model = BertForSequenceClassification(config, num_labels=num_labels)
         model.load_state_dict(torch.load(args.model_file))
