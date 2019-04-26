@@ -1,7 +1,16 @@
+import os
+
 import torch
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
                               TensorDataset)
 from torch.utils.data.distributed import DistributedSampler
+
+from pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
+from pytorch_pretrained_bert.modeling import BertForSequenceClassification, BertConfig, WEIGHTS_NAME, CONFIG_NAME
+from pytorch_pretrained_bert.tokenization import BertTokenizer
+from pytorch_pretrained_bert.optimization import BertAdam, warmup_linear
+
+from data_processors import *
 
 
 def convert_examples_to_features(examples, label_list, max_seq_length,
@@ -175,7 +184,7 @@ def process_data(processor,
                  do_train,
                  train_batch_size,
                  gradient_accumulation_steps,
-                 num_train_epochs):
+                 num_train_epochs, **kwargs):
     label_list = processor.get_labels()
     num_labels = len(label_list)
     tokenizer = BertTokenizer.from_pretrained(
@@ -197,11 +206,11 @@ def get_dataloader(
     tokenizer, output_mode,
     max_seq_length,
     local_rank, batch_size,
-    logger=None, eval_data=False):
+    logger=None, eval_data=False, **kwargs):
 
     features = convert_examples_to_features(
         examples, label_list,
-        args.max_seq_length, tokenizer,
+        max_seq_length, tokenizer,
         output_mode, logger=logger)
 
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
@@ -222,3 +231,50 @@ def get_dataloader(
 
     train_dataloader = DataLoader(data, sampler=sampler, batch_size=batch_size)
     return train_dataloader
+
+
+
+def get_optimizer(model, learning_rate, warmup_proportion, 
+                  num_train_optimization_steps, **kwargs):
+    param_optimizer = list(model.named_parameters())
+    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+    optimizer_grouped_parameters = [
+        {'params': [p for n, p in param_optimizer 
+                    if not any(nd in n for nd in no_decay)], 
+         'weight_decay': 0.01},
+        {'params': [p for n, p in param_optimizer 
+                    if any(nd in n for nd in no_decay)], 
+         'weight_decay': 0.0}
+        ]
+    optimizer = BertAdam(optimizer_grouped_parameters,
+                     lr=learning_rate,
+                     warmup=warmup_proportion,
+                     t_total=num_train_optimization_steps)
+    return optimizer
+
+
+def get_data(processor, runtime_config):
+    label_list, num_labels, tokenizer, train_examples, num_train_optimization_steps = \
+    process_data(processor, **runtime_config)
+
+    train_dataloader = get_dataloader(train_examples, label_list, 
+                   tokenizer, **runtime_config)
+    return label_list, num_labels, tokenizer, train_examples, \
+           num_train_optimization_steps, train_dataloader
+
+def get_log_name():
+    import pytz
+    from datetime import datetime
+    now = datetime.now(tz=pytz.UTC)
+    now_est = now.astimezone(pytz.timezone('America/New_York'))
+    return now_est.strftime('%Y-%m-%d_%H_%M')
+     
+    
+def save_model(model, output_dir):
+    # Save a trained model and the associated configuration
+    model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
+    output_model_file = os.path.join(output_dir, WEIGHTS_NAME)
+    torch.save(model_to_save.state_dict(), output_model_file)
+    output_config_file = os.path.join(args.output_dir, CONFIG_NAME)
+    with open(output_config_file, 'w') as f:
+        f.write(model_to_save.config.to_json_string())
