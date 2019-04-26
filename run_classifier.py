@@ -186,11 +186,6 @@ def main():
     output_mode = output_modes[task_name]
     if task_name == "mrpc": processor.set_logger(logger)
 
-    label_list = processor.get_labels()
-    num_labels = len(label_list)
-    tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=args.do_lower_case)
-
-
     processed_data = process_data(processor,
                                   output_mode,
                                   args.data_dir,
