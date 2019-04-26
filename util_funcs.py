@@ -1,3 +1,9 @@
+import torch
+from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
+                              TensorDataset)
+from torch.utils.data.distributed import DistributedSampler
+
+
 def convert_examples_to_features(examples, label_list, max_seq_length,
                                  tokenizer, output_mode, logger=None):
     """Loads a data file into a list of `InputBatch`s."""
@@ -160,3 +166,59 @@ def writer_callback(counter, period_loss, tb_writer, run_name, *args):
     """Use tb_writer to write counter and total_period_loss"""
     tb_writer.add_scalar(f"{run_name}/training_error", period_loss, counter)
     callback(counter, period_loss, tb_writer, run_name, *args)
+
+def process_data(processor,
+                 output_mode,
+                 data_dir,
+                 bert_model,
+                 do_lower_case,
+                 do_train,
+                 train_batch_size,
+                 gradient_accumulation_steps,
+                 num_train_epochs):
+    label_list = processor.get_labels()
+    num_labels = len(label_list)
+    tokenizer = BertTokenizer.from_pretrained(
+        bert_model, do_lower_case=do_lower_case)
+    train_examples = None
+    num_train_optimization_steps = None
+    if do_train:
+        train_examples = processor.get_train_examples(data_dir)
+        num_train_optimization_steps = int(
+            len(train_examples) / train_batch_size
+            / gradient_accumulation_steps) * num_train_epochs
+    else:
+        train_examples = None
+        num_train_optimization_steps = None
+    return label_list, num_labels, tokenizer, train_examples, num_train_optimization_steps
+
+def get_dataloader(
+    examples, label_list,
+    tokenizer, output_mode,
+    max_seq_length,
+    local_rank, batch_size,
+    logger=None, eval_data=False):
+
+    features = convert_examples_to_features(
+        examples, label_list,
+        args.max_seq_length, tokenizer,
+        output_mode, logger=logger)
+
+    all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
+    all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
+    all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
+
+    dt = torch.long if output_mode == "classification" else torch.float
+    all_label_ids = torch.tensor([f.label_id for f in features], dtype=dt)
+
+    data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
+
+    if eval_data:
+        sampler = SequentialSampler(data)
+    elif local_rank == -1:
+        sampler = RandomSampler(data)
+    else:
+        sampler = DistributedSampler(data)
+
+    train_dataloader = DataLoader(data, sampler=sampler, batch_size=batch_size)
+    return train_dataloader

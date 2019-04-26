@@ -80,10 +80,6 @@ def main():
                         help="The output directory where the model predictions and checkpoints will be written.")
 
     ## Other parameters
-    parser.add_argument("--cache_dir",
-                        default="",
-                        type=str,
-                        help="Where do you want to store the pre-trained models downloaded from s3")
     parser.add_argument("--max_seq_length",
                         default=128,
                         type=int,
@@ -127,10 +123,6 @@ def main():
                         type=int,
                         default=-1,
                         help="local_rank for distributed training on gpus")
-    parser.add_argument('--seed',
-                        type=int,
-                        default=42,
-                        help="random seed for initialization")
     parser.add_argument('--gradient_accumulation_steps',
                         type=int,
                         default=1,
@@ -150,33 +142,6 @@ def main():
     parser.add_argument("--pretrained_weights_dir_for_training", type=str, default="", help="Directory of external weights to start training from")
     args = parser.parse_args()
 
-
-
-    processors = {
-        "cola": ColaProcessor,
-        "mnli": MnliProcessor,
-        "mnli-mm": MnliMismatchedProcessor,
-        "mrpc": MrpcProcessor,
-        "sst-2": Sst2Processor,
-        "sts-b": StsbProcessor,
-        "qqp": QqpProcessor,
-        "qnli": QnliProcessor,
-        "rte": RteProcessor,
-        "wnli": WnliProcessor,
-    }
-
-    output_modes = {
-        "cola": "classification",
-        "mnli": "classification",
-        "mrpc": "classification",
-        "sst-2": "classification",
-        "sts-b": "regression",
-        "qqp": "classification",
-        "qnli": "classification",
-        "rte": "classification",
-        "wnli": "classification",
-    }
-
     tb_writer = SummaryWriter(log_dir=args.tensorboard_log_dir)
 
     if args.local_rank == -1 or args.no_cuda:
@@ -188,6 +153,7 @@ def main():
         n_gpu = 1
         # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.distributed.init_process_group(backend='nccl')
+
     logger.info("device: {} n_gpu: {}, distributed training: {}".format(
         device, n_gpu, bool(args.local_rank != -1)))
 
@@ -197,63 +163,67 @@ def main():
 
     args.train_batch_size = args.train_batch_size // args.gradient_accumulation_steps
 
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
+    SEED = 2138
+    random.seed(SEED)
+    np.random.seed(SEED)
+    torch.manual_seed(SEED)
+
     if n_gpu > 0:
         torch.cuda.manual_seed_all(args.seed)
 
     if not args.do_train and not args.do_eval:
         raise ValueError("At least one of `do_train` or `do_eval` must be True.")
-
     if os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train:
         raise ValueError("Output directory ({}) already exists and is not empty.".format(args.output_dir))
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
     task_name = args.task_name.lower()
+    if task_name not in processors: raise ValueError("Task not found: %s" % (task_name))
 
-    if task_name not in processors:
-        raise ValueError("Task not found: %s" % (task_name))
-
+    # processors and output_modes are dicts in data_processor
     processor = processors[task_name]()
     output_mode = output_modes[task_name]
-
-    if task_name == "mrpc":
-        processor.set_logger(logger)
+    if task_name == "mrpc": processor.set_logger(logger)
 
     label_list = processor.get_labels()
     num_labels = len(label_list)
-
     tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=args.do_lower_case)
 
-    train_examples = None
-    num_train_optimization_steps = None
-    if args.do_train:
-        train_examples = processor.get_train_examples(args.data_dir)
-        num_train_optimization_steps = int(
-            len(train_examples) / args.train_batch_size / args.gradient_accumulation_steps) * args.num_train_epochs
-        if args.local_rank != -1:
-            num_train_optimization_steps = num_train_optimization_steps // torch.distributed.get_world_size()
+
+    processed_data = process_data(processor,
+                                  output_mode,
+                                  args.data_dir,
+                                  args.bert_model,
+                                  args.do_lower_case,
+                                  args.do_train,
+                                  args.train_batch_size,
+                                  args.gradient_accumulation_steps,
+                                  args.num_train_epochs)
+
+    (label_list, num_labels, tokenizer,
+        train_examples, num_train_optimization_steps) = processed_data
+
 
     # Prepare model
-    cache_dir = args.cache_dir if args.cache_dir else os.path.join(str(PYTORCH_PRETRAINED_BERT_CACHE), 'distributed_{}'.format(args.local_rank))
+    cache_dir = os.path.join(str(PYTORCH_PRETRAINED_BERT_CACHE), 'distributed_{}'.format(args.local_rank))
     model = BertForSequenceClassification.from_pretrained(args.bert_model,
-              cache_dir=cache_dir,
-              num_labels=num_labels)
-
+        cache_dir=cache_dir, num_labels=num_labels)
     model.to(device)
+
     if args.local_rank != -1:
         try:
             from apex.parallel import DistributedDataParallel as DDP
         except ImportError:
             raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use distributed and fp16 training.")
-
         model = DDP(model)
     elif n_gpu > 1:
         model = torch.nn.DataParallel(model)
 
-
+    if args.pretrained_weights_dir_for_training != "":
+        with open(args.pretrained_weights_dir_for_training, "rb") as f:
+            pretrained_weights = torch.load(f)
+    model.load_state_dict(pretrained_weights)
 
     # Prepare optimizer
     param_optimizer = list(model.named_parameters())
@@ -271,46 +241,31 @@ def main():
     nb_tr_steps = 0
     tr_loss = 0
 
-    if args.pretrained_weights_dir_for_training != "":
-        with open(args.pretrained_weights_dir_for_training, "rb") as f:
-            pretrained_weights = torch.load(f)
-        model.load_state_dict(pretrained_weights)
-
     if args.do_train:
-        train_features = convert_examples_to_features(
-            train_examples, label_list, args.max_seq_length, tokenizer, output_mode, logger=logger)
         logger.info("***** Running training *****")
         logger.info("  Num examples = %d", len(train_examples))
         logger.info("  Batch size = %d", args.train_batch_size)
         logger.info("  Num steps = %d", num_train_optimization_steps)
-        all_input_ids = torch.tensor([f.input_ids for f in train_features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in train_features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in train_features], dtype=torch.long)
 
-        if output_mode == "classification":
-            all_label_ids = torch.tensor([f.label_id for f in train_features], dtype=torch.long)
-        elif output_mode == "regression":
-            all_label_ids = torch.tensor([f.label_id for f in train_features], dtype=torch.float)
-
-        train_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-        if args.local_rank == -1:
-            train_sampler = RandomSampler(train_data)
-        else:
-            train_sampler = DistributedSampler(train_data)
-        train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=args.train_batch_size)
+        train_dataloader = get_dataloader(
+                train_examples, label_list,
+                tokenizer, output_mode,
+                args.max_seq_length,
+                args.local_rank,
+                args.train_batch_size, logger=None)
 
         model.train()
 
         counter = 0
         total_period_loss = 0
         print("Reporting every " + str(args.report_frequency) + " batches...")
+
         for _ in trange(int(args.num_train_epochs), desc="Epoch"):
             tr_loss = 0
             nb_tr_examples, nb_tr_steps = 0, 0
             for step, batch in enumerate(tqdm(train_dataloader, desc="Iteration")):
 
                 # Deep twist
-
                 if counter % args.twist_frequency == 0 and counter > 0 and args.twist_frequency > 0:
                     distort(model, **additional_args)
 
@@ -343,18 +298,12 @@ def main():
                     writer_callback(counter, total_period_loss / args.report_frequency, tb_writer, args.run_name)
                     total_period_loss = 0
 
-
-
                 nb_tr_examples += input_ids.size(0)
                 nb_tr_steps += 1
                 if (step + 1) % args.gradient_accumulation_steps == 0:
                     optimizer.step()
                     optimizer.zero_grad()
                     global_step += 1
-
-
-
-
 
         # Save a trained model and the associated configuration
         model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
@@ -364,37 +313,35 @@ def main():
         with open(output_config_file, 'w') as f:
             f.write(model_to_save.config.to_json_string())
 
-        # Load a trained model and config that you have fine-tuned
-        config = BertConfig(output_config_file)
-        model = BertForSequenceClassification(config, num_labels=num_labels)
-        model.load_state_dict(torch.load(output_model_file))
-    else:
-        config = BertConfig(args.config_file)
+        # What's with the following code? Seems to save and then load the model just saved
+        # # Load a trained model and config that you have fine-tuned
+        # config = BertConfig(output_config_file)
+        # model = BertForSequenceClassification(config, num_labels=num_labels)
+        # model.load_state_dict(torch.load(output_model_file))
 
+    # If we don't do_train
+    elif args.model_file != "":
+        config = BertConfig(args.config_file)
         model = BertForSequenceClassification(config, num_labels=num_labels)
         model.load_state_dict(torch.load(args.model_file))
+    else:
+        model = BertForSequenceClassification.from_pretrained(args.bert_model,
+        cache_dir=cache_dir, num_labels=num_labels)
+
     model.to(device)
 
     if args.do_eval and (args.local_rank == -1 or torch.distributed.get_rank() == 0):
-        eval_examples = processor.get_dev_examples(args.data_dir)
-        eval_features = convert_examples_to_features(
-            eval_examples, label_list, args.max_seq_length, tokenizer, output_mode, logger=logger)
         logger.info("***** Running evaluation *****")
         logger.info("  Num examples = %d", len(eval_examples))
         logger.info("  Batch size = %d", args.eval_batch_size)
-        all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-        all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-        all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
 
-        if output_mode == "classification":
-            all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
-        elif output_mode == "regression":
-            all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.float)
-
-        eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-        # Run prediction for full data
-        eval_sampler = SequentialSampler(eval_data)
-        eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
+        eval_examples = processor.get_dev_examples(args.data_dir)
+        eval_dataloader = get_dataloader(
+                eval_examples, label_list,
+                tokenizer, output_mode,
+                args.max_seq_length,
+                args.local_rank,
+                args.eval_batch_size, logger=None)
 
         model.eval()
         eval_loss = 0
@@ -445,74 +392,6 @@ def main():
             for key in sorted(result.keys()):
                 logger.info("  %s = %s", key, str(result[key]))
                 writer.write("%s = %s\n" % (key, str(result[key])))
-
-        # hack for MNLI-MM
-        if task_name == "mnli":
-            task_name = "mnli-mm"
-            processor = processors[task_name]()
-
-            if os.path.exists(args.output_dir + '-MM') and os.listdir(args.output_dir + '-MM') and args.do_train:
-                raise ValueError("Output directory ({}) already exists and is not empty.".format(args.output_dir))
-            if not os.path.exists(args.output_dir + '-MM'):
-                os.makedirs(args.output_dir + '-MM')
-
-            eval_examples = processor.get_dev_examples(args.data_dir)
-            eval_features = convert_examples_to_features(
-                eval_examples, label_list, args.max_seq_length, tokenizer, output_mode, logger=logger)
-            logger.info("***** Running evaluation *****")
-            logger.info("  Num examples = %d", len(eval_examples))
-            logger.info("  Batch size = %d", args.eval_batch_size)
-            all_input_ids = torch.tensor([f.input_ids for f in eval_features], dtype=torch.long)
-            all_input_mask = torch.tensor([f.input_mask for f in eval_features], dtype=torch.long)
-            all_segment_ids = torch.tensor([f.segment_ids for f in eval_features], dtype=torch.long)
-            all_label_ids = torch.tensor([f.label_id for f in eval_features], dtype=torch.long)
-
-            eval_data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
-            # Run prediction for full data
-            eval_sampler = SequentialSampler(eval_data)
-            eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=args.eval_batch_size)
-
-            model.eval()
-            eval_loss = 0
-            nb_eval_steps = 0
-            preds = []
-
-            for input_ids, input_mask, segment_ids, label_ids in tqdm(eval_dataloader, desc="Evaluating"):
-                input_ids = input_ids.to(device)
-                input_mask = input_mask.to(device)
-                segment_ids = segment_ids.to(device)
-                label_ids = label_ids.to(device)
-
-                with torch.no_grad():
-                    logits = model(input_ids, segment_ids, input_mask, labels=None)
-
-                loss_fct = CrossEntropyLoss()
-                tmp_eval_loss = loss_fct(logits.view(-1, num_labels), label_ids.view(-1))
-
-                eval_loss += tmp_eval_loss.mean().item()
-                nb_eval_steps += 1
-                if len(preds) == 0:
-                    preds.append(logits.detach().cpu().numpy())
-                else:
-                    preds[0] = np.append(
-                        preds[0], logits.detach().cpu().numpy(), axis=0)
-
-            eval_loss = eval_loss / nb_eval_steps
-            preds = preds[0]
-            preds = np.argmax(preds, axis=1)
-            result = compute_metrics(task_name, preds, all_label_ids.numpy())
-            loss = tr_loss/nb_tr_steps if args.do_train else None
-
-            result['eval_loss'] = eval_loss
-            result['global_step'] = global_step
-            result['loss'] = loss
-
-            output_eval_file = os.path.join(args.output_dir + '-MM', "eval_results.txt")
-            with open(output_eval_file, "w") as writer:
-                logger.info("***** Eval results *****")
-                for key in sorted(result.keys()):
-                    logger.info("  %s = %s", key, str(result[key]))
-                    writer.write("%s = %s\n" % (key, str(result[key])))
 
     tb_writer.close()
 
