@@ -49,16 +49,25 @@ def weight_prune(state_dict, p=.2, tqdm=False):
     return new_state_dict
 
 def quantization(state_dict, n_clusters=128):
-    flattened = torch.cat([param.flatten() for param in state_dict.values()]).cpu().numpy().reshape(-1, 1)
-    kmeans = MiniBatchKMeans(n_clusters=n_clusters, max_no_improvement=2).fit(flattened)
-    clustered = [kmeans.cluster_centers_[index] for index in kmeans.predict(flattened)]
+    flattened = torch.cat([param.flatten() for param in state_dict.values()]) \
+                    .cpu().numpy().reshape(-1, 1)
+    kmeans = MiniBatchKMeans(n_clusters=n_clusters,
+                             max_no_improvement=2).fit(flattened)
+    clustered = [kmeans.cluster_centers_[index]
+                 for index in kmeans.predict(flattened)]
 
     # replace the original parameters with cluster centers
     cursor = 0
     for key in state_dict.keys():
         shape = state_dict[key].shape
         size = state_dict[key].numel()
-        state_dict[key] = torch.Tensor(clustered[cursor:cursor + size]).reshape(shape)
+        state_dict[key] = torch.Tensor(clustered[cursor:cursor + size]) \
+                                .reshape(shape)
         cursor += size
         
     return state_dict
+
+def count_param(dict_):
+    num_param = sum([x.numel() for x in dict_.values()])
+    print("{:,}".format(num_param))
+    return num_param
