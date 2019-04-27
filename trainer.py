@@ -1,4 +1,4 @@
-from tqdm import tqdm_notebook as tqdm
+from tqdm import tqdm_notebook, tqdm
 import numpy as np
 from util_funcs import *
 from data_processors import *
@@ -14,9 +14,10 @@ def get_progress_bar(option=None):
         progress_bar = tqdm
     else:
         progress_bar = _null_progress_bar
+    return progress_bar
 
 class Trainer:
-    def __init__(self, model, data, loss_fn, optimizer, output_dir,
+    def __init__(self, model, data, loss_fn, optimizer, output_dir, num_labels,
                  writer=None,
                  val_data=None, 
                  device=torch.device("cuda"),
@@ -29,6 +30,7 @@ class Trainer:
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.device = device
+        self.num_labels = num_labels
         
     def train_loop(self, *args, **kwargs):
         raise NotImplementedError
@@ -47,21 +49,21 @@ class Trainer:
         self.total_period_loss = 0
         self.total_period_val_loss = 0
         
-    def train(self, num_train_epochs, num, 
+    def train(self, num_train_epochs,
               progress_bar="notebook",
               patience=2, **kwargs):
         self.counter = 0        
         self.total_period_loss = 0
         self.total_period_val_loss = 0
         device = self.device
-        
+        opt_progress_bar = progress_bar
         progress_bar = get_progress_bar(option=progress_bar)
         best_val_loss = np.inf
         best_state_dict = None
         best_epoch = 0
         for epoch in progress_bar(range(num_train_epochs), desc="Epoch"):
             try:
-                val_loss = self.train_loop(**kwargs)
+                val_loss = self.train_loop(progress_bar=opt_progress_bar, **kwargs)
                 
                 # Early stopping
                 if val_loss < best_val_loss:
@@ -85,7 +87,7 @@ class Trainer:
             
 class DeepTwistTrainer(Trainer):
     def __init__(self, model, data, 
-                 output_dir,
+                 output_dir, num_labels,
                  twist_frequency,
                  loss_fn, optimizer,
                  distort,
@@ -94,10 +96,8 @@ class DeepTwistTrainer(Trainer):
                  val_data=None, 
                  device=torch.device("cuda"),
                  **kwargs):
-        super().__init__(model, data, 
-                         output_dir
+        super().__init__(model, data, loss_fn, optimizer, output_dir, num_labels,
                          writer=writer,
-                         loss_fn, optimizer,
                          val_data=val_data, 
                          device=torch.device("cuda"),
                          **kwargs)
@@ -107,10 +107,14 @@ class DeepTwistTrainer(Trainer):
         self.train_opts = kwargs
         
         
-    def train_loop(self, *args, progress_bar='notebook', report_validation=True, **kwargs):
+    def train_loop(self, *args, progress_bar='notebook', report_frequency=5, report_validation=True, **kwargs):
+        opt_progress_bar = progress_bar
+        self.report_frequency = report_frequency
+        num_labels = self.num_labels
         device = self.device
         self.model.train()
-        locals().update(self.train_opts)
+        gradient_accumulation_steps = self.train_opts['gradient_accumulation_steps']
+        
         tr_loss = 0
         nb_tr_examples, nb_tr_steps = 0, 0
         progress_bar = get_progress_bar(option=progress_bar)
@@ -135,27 +139,30 @@ class DeepTwistTrainer(Trainer):
             if (step + 1) % gradient_accumulation_steps == 0:
                 self.optimizer.step()
                 self.optimizer.zero_grad()            
-                
-            if self.tb_writer is not None:
-                self.counter += 1
+            
+            if self.tb_writer is not None and self.counter >= report_frequency and self.counter % report_frequency == 0:
                 self.total_period_loss += loss.item()
                 if report_validation:
                     self.total_period_val_loss, self.total_period_val_acc = self.validate()
                 self.report(report_validation, **kwargs)
+            self.counter += 1
+
                 
             # Deep twist
-            if counter % twist_frequency == 0 and counter > 0 and twist_frequency > 0:
-                state_dict = distort(self.model.cpu().state_dict(), **self.twist_args)
+            if self.counter % self.twist_frequency == 0 and self.counter > 0 and self.twist_frequency > 0:
+                state_dict = self.distort(self.model.cpu().state_dict(), **self.twist_args)
                 self.model.load_state_dict(state_dict)
                 self.model.cuda()
         
         # Twist at epoch end 
-        state_dict = distort(self.model.cpu().state_dict(), **self.twist_args)
+        state_dict = self.distort(self.model.cpu().state_dict(), **self.twist_args)
         self.model.load_state_dict(state_dict)
         self.model.cuda()
         return self.validate()[0]
     
-    def validate(self):
+    def validate(self, progress_bar=None, **kwargs):
+        num_labels = self.num_labels
+        progress_bar = get_progress_bar(progress_bar)
         device = self.device
         self.model.eval()
         eval_loss = 0
@@ -165,7 +172,7 @@ class DeepTwistTrainer(Trainer):
         
         if self.val_data is None:
             return None
-        for step, batch in enumerate(progress_bar(self.val_data, desc="Validation")):
+        for step, batch in enumerate(progress_bar(self.val_data, desc="Validation", leave=False)):
             batch = tuple(t.to(device) for t in batch)
             input_ids, input_mask, segment_ids, label_ids = batch
             
@@ -175,7 +182,7 @@ class DeepTwistTrainer(Trainer):
             
             # No regression support
             loss = self.loss_fn(logits.view(-1, num_labels), label_ids.view(-1))
-            eval_loss += tmp_eval_loss.mean().item()   
+            eval_loss += loss.mean().item()   
             nb_eval_steps += 1
             
             correct += (np.argmax(logits.detach().cpu().numpy(), axis=1) == 
