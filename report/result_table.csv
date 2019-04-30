@@ -1,0 +1,18 @@
+,index,framework,type,param,val_loss,val_acc,date,f_name
+0,13,deeptwist,diff_prune,60,0.20892978911953314,0.9197247706422018,2019-04-29 03:23:00,output/deeptwist/diff_prune60_2019-04-29_03_23/pytorch_model.bin
+1,4,deeptwist,diff_prune,80,0.22175044692786677,0.9162844036697247,2019-04-29 07:46:00,output/deeptwist/diff_prune80_2019-04-29_07_46/pytorch_model.bin
+2,12,deeptwist,diff_prune,90,0.21618063002824783,0.9162844036697247,2019-04-29 13:48:00,output/deeptwist/diff_prune90_2019-04-29_13_48/pytorch_model.bin
+3,5,deeptwist,diff_prune,40,0.20304070253457343,0.9094036697247706,2019-04-28 23:29:00,output/deeptwist/diff_prune40_2019-04-28_23_29/pytorch_model.bin
+4,11,deeptwist,prune,20,0.3699096803154264,0.8899082568807339,2019-04-26 20:44:00,output/deeptwist/prune20_2019-04-26_20_44/pytorch_model.bin
+5,2,deeptwist,prune,20,0.2910312528588942,0.8864678899082569,2019-04-28 00:57:00,output/deeptwist/prune20_2019-04-28_00_57/pytorch_model.bin
+6,7,deeptwist,svd,200,0.4586899418916021,0.8451834862385321,2019-04-27 17:31:00,output/deeptwist/svd200_2019-04-27_17_31/pytorch_model.bin
+7,9,deeptwist,prune,40,0.4241826531610319,0.8451834862385321,2019-04-28 10:22:00,output/deeptwist/prune40_2019-04-28_10_22/pytorch_model.bin
+8,1,deeptwist,prune,40,0.5266401703868594,0.8279816513761468,2019-04-27 02:07:00,output/deeptwist/prune40_2019-04-27_02_07/pytorch_model.bin
+9,16,deeptwist,svd,150,0.45643535469259533,0.8279816513761468,2019-04-27 16:00:00,output/deeptwist/svd150_2019-04-27_16_00/pytorch_model.bin
+10,14,deeptwist,svd,100,0.5154893036399569,0.823394495412844,2019-04-27 14:30:00,output/deeptwist/svd100_2019-04-27_14_30/pytorch_model.bin
+11,15,deeptwist,prune,60,0.46531603219253675,0.8176605504587156,2019-04-27 04:52:00,output/deeptwist/prune60_2019-04-27_04_52/pytorch_model.bin
+12,10,deeptwist,prune,60,0.4252707303634712,0.8153669724770642,2019-04-28 17:13:00,output/deeptwist/prune60_2019-04-28_17_13/pytorch_model.bin
+13,6,deeptwist,svd,50,0.48992379009723663,0.8096330275229358,2019-04-27 12:59:00,output/deeptwist/svd50_2019-04-27_12_59/pytorch_model.bin
+14,3,deeptwist,prune,80,0.5323777954493251,0.7672018348623854,2019-04-27 07:59:00,output/deeptwist/prune80_2019-04-27_07_59/pytorch_model.bin
+15,8,deeptwist,prune,40,81.63546970912388,0.5091743119266054,2019-04-26 23:02:00,output/deeptwist/prune40_2019-04-26_23_02/pytorch_model.bin
+16,0,deeptwist,prune,60,,,2019-04-27 01:46:00,output/deeptwist/prune60_2019-04-27_01_46/pytorch_model.bin
