@@ -4,6 +4,8 @@ import torch
 from tqdm import tqdm
 
 from collections import OrderedDict
+from operator import add, sub
+
 
 from sklearn.cluster import MiniBatchKMeans
 
@@ -64,10 +66,30 @@ def quantization(state_dict, n_clusters=128):
         state_dict[key] = torch.Tensor(clustered[cursor:cursor + size]) \
                                 .reshape(shape)
         cursor += size
-        
     return state_dict
 
 def count_param(dict_):
     num_param = sum([x.numel() for x in dict_.values()])
     print("{:,}".format(num_param))
     return num_param
+
+def binop_apply(s1, s2, op):
+    assert s1.keys() == s2.keys()
+    new_state_dict = OrderedDict([])
+    for k in s1.keys():
+        new_state_dict[k] = op(s1[k], s2[k])
+    return new_state_dict
+
+class to_bert:
+    def __init__(self, base_model):
+        self.base_model = base_model
+    
+    def __call__(self, f, **kwargs):
+        base_model = self.base_model
+        def wrapped_f(current_model, **kwargs):
+            new_state_dict = OrderedDict([])
+            diff = binop_apply(current_model, base_model, sub)
+            new_diff = f(diff, **kwargs)
+            new_state_dict = binop_apply(base_model, new_diff, add)
+            return new_state_dict
+        return wrapped_f

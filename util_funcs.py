@@ -11,6 +11,7 @@ from pytorch_pretrained_bert.tokenization import BertTokenizer
 from pytorch_pretrained_bert.optimization import BertAdam, warmup_linear
 
 from data_processors import *
+from callback import callback
 
 
 def convert_examples_to_features(examples, label_list, max_seq_length,
@@ -171,9 +172,10 @@ def compute_metrics(task_name, preds, labels):
         raise KeyError(task_name)
 
 
-def writer_callback(counter, period_loss, tb_writer, run_name, *args):
+def writer_callback(counter, period_loss, tb_writer, run_name, *args, variable="training_error"):
     """Use tb_writer to write counter and total_period_loss"""
-    tb_writer.add_scalar(f"{run_name}/training_error", period_loss, counter)
+    tb_writer.add_scalar(f"{run_name}/{variable}",
+                         period_loss, counter)
     callback(counter, period_loss, tb_writer, run_name, *args)
 
 def process_data(processor,
@@ -253,12 +255,12 @@ def get_optimizer(model, learning_rate, warmup_proportion,
     return optimizer
 
 
-def get_data(processor, runtime_config):
+def get_data(processor, runtime_config, **kwargs):
     label_list, num_labels, tokenizer, train_examples, num_train_optimization_steps = \
-    process_data(processor, **runtime_config)
+    process_data(processor, **runtime_config, **kwargs)
 
     train_dataloader = get_dataloader(train_examples, label_list, 
-                   tokenizer, **runtime_config)
+                   tokenizer, **runtime_config, **kwargs)
     return label_list, num_labels, tokenizer, train_examples, \
            num_train_optimization_steps, train_dataloader
 
@@ -275,6 +277,6 @@ def save_model(model, output_dir):
     model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
     output_model_file = os.path.join(output_dir, WEIGHTS_NAME)
     torch.save(model_to_save.state_dict(), output_model_file)
-    output_config_file = os.path.join(args.output_dir, CONFIG_NAME)
+    output_config_file = os.path.join(output_dir, CONFIG_NAME)
     with open(output_config_file, 'w') as f:
         f.write(model_to_save.config.to_json_string())
