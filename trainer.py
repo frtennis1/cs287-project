@@ -42,7 +42,7 @@ class Trainer:
         writer_callback(self.counter, self.total_period_loss / self.report_frequency,
                         self.tb_writer, run_name=self.output_dir.replace("/", "_"))
         if report_validation:
-            writer_callback(self.counter, self.total_period_val_loss / self.report_frequency,
+            writer_callback(self.counter, self.total_period_val_loss,
                             self.tb_writer, run_name=self.output_dir.replace("/", "_"), variable="validation_loss")
             writer_callback(self.counter, self.total_period_val_acc,
                             self.tb_writer, run_name=self.output_dir.replace("/", "_"), variable="validation_accuracy")
@@ -73,14 +73,13 @@ class Trainer:
                     best_epoch = epoch
                 elif epoch > best_epoch + patience:
                     self.model.cpu().load_state_dict(best_state_dict)
-                    self.model.to(device)
-                    return self.model
+                    break
                 else:
                     pass
 
             except KeyboardInterrupt:
                 break
-        save_model(self.model, self.output_dir)
+        save_model(self.model.cpu(), self.output_dir)
         if self.tb_writer is not None:
             self.tb_writer.close()
 
@@ -139,12 +138,13 @@ class DeepTwistTrainer(Trainer):
             if (step + 1) % gradient_accumulation_steps == 0:
                 self.optimizer.step()
                 self.optimizer.zero_grad()            
+            self.total_period_loss += loss.item()
             
             if self.tb_writer is not None and self.counter >= report_frequency and self.counter % report_frequency == 0:
-                self.total_period_loss += loss.item()
                 if report_validation:
                     self.total_period_val_loss, self.total_period_val_acc = self.validate()
                 self.report(report_validation, **kwargs)
+                self.total_period_loss = 0
             self.counter += 1
 
                 

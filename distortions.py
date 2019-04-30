@@ -4,6 +4,8 @@ import torch
 from tqdm import tqdm
 
 from collections import OrderedDict
+from operator import add, sub
+
 
 def svd_compress(state_dict, k=100, tqdm=False):
     new_state_dict = OrderedDict()
@@ -46,3 +48,24 @@ def weight_prune(state_dict, p=.2, tqdm=False):
     
     return new_state_dict
         
+
+def binop_apply(s1, s2, op):
+    assert s1.keys() == s2.keys()
+    new_state_dict = OrderedDict([])
+    for k in s1.keys():
+        new_state_dict[k] = op(s1[k], s2[k])
+    return new_state_dict
+
+class to_bert:
+    def __init__(self, base_model):
+        self.base_model = base_model
+    
+    def __call__(self, f, **kwargs):
+        base_model = self.base_model
+        def wrapped_f(current_model, **kwargs):
+            new_state_dict = OrderedDict([])
+            diff = binop_apply(current_model, base_model, sub)
+            new_diff = f(diff, **kwargs)
+            new_state_dict = binop_apply(base_model, new_diff, add)
+            return new_state_dict
+        return wrapped_f
