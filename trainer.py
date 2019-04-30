@@ -193,4 +193,104 @@ class DeepTwistTrainer(Trainer):
         return eval_loss, correct / total
         self.model.train()
             
+
+class KDTrainer(Trainer):
+    def __init__(self, model, data, 
+                 output_dir, num_labels,
+                 loss_fn, val_loss_fn, optimizer, teacher,
+                 writer=None,
+                 val_data=None, 
+                 device=torch.device("cuda"),
+                 **kwargs):
+        super().__init__(model, data, loss_fn, optimizer, output_dir, num_labels,
+                         writer=writer,
+                         val_data=val_data, 
+                         device=torch.device("cuda"),
+                         **kwargs)
+        self.train_opts = kwargs
+        self.teacher = teacher.to(device).eval()
+        self.val_loss_fn = val_loss_fn
         
+    def train_loop(self, *args, progress_bar='notebook', 
+                   report_frequency=5, report_validation=True, **kwargs):
+        opt_progress_bar = progress_bar
+        self.report_frequency = report_frequency
+        num_labels = self.num_labels
+        device = self.device
+        self.model.train()
+        gradient_accumulation_steps = self.train_opts['gradient_accumulation_steps']
+        
+        tr_loss = 0
+        nb_tr_examples, nb_tr_steps = 0, 0
+        progress_bar = get_progress_bar(option=progress_bar)
+        
+        for step, batch in enumerate(progress_bar(self.data, desc="Iteration")):
+            batch = tuple(t.to(device) for t in batch)
+            input_ids, input_mask, segment_ids, label_ids = batch
+            
+            with torch.no_grad():
+                teacher_probs = self.teacher(input_ids, segment_ids, input_mask, labels=None)
+                
+            # define a new function to compute loss values for both output_modes
+            logits = self.model(input_ids, segment_ids, input_mask, labels=None)
+            
+            # No regression support
+            loss = self.loss_fn(logits.softmax(dim=1), teacher_probs)
+                        
+            if gradient_accumulation_steps > 1:
+                loss = loss / gradient_accumulation_steps
+            
+            loss.backward()
+            tr_loss += loss.item()
+            
+            nb_tr_examples += input_ids.size(0)
+            nb_tr_steps += 1
+            if (step + 1) % gradient_accumulation_steps == 0:
+                self.optimizer.step()
+                self.optimizer.zero_grad()            
+            self.total_period_loss += loss.item()
+            
+            if self.tb_writer is not None and self.counter >= report_frequency and self.counter % report_frequency == 0:
+                if report_validation:
+                    self.total_period_val_loss, self.total_period_val_acc = self.validate()
+                self.report(report_validation, **kwargs)
+                self.total_period_loss = 0
+            self.counter += 1
+
+        self.model.load_state_dict(state_dict)
+        self.model.cuda()
+        return self.validate()[0]
+    
+    
+    def validate(self, progress_bar=None, **kwargs):
+        num_labels = self.num_labels
+        progress_bar = get_progress_bar(progress_bar)
+        device = self.device
+        self.model.eval()
+        eval_loss = 0
+        nb_eval_steps = 0
+        correct = 0
+        total = 0
+        
+        if self.val_data is None:
+            return None
+        for step, batch in enumerate(progress_bar(self.val_data, desc="Validation", leave=False)):
+            batch = tuple(t.to(device) for t in batch)
+            input_ids, input_mask, segment_ids, label_ids = batch
+            
+            # define a new function to compute loss values for both output_modes
+            with torch.no_grad():
+                logits = self.model(input_ids, segment_ids, input_mask, labels=None)
+            
+            # No regression support
+            loss = self.val_loss_fn(logits.view(-1, num_labels), label_ids.view(-1))
+            eval_loss += loss.mean().item()   
+            nb_eval_steps += 1
+            
+            correct += (np.argmax(logits.detach().cpu().numpy(), axis=1) == 
+                        label_ids.detach().cpu().numpy().flatten()).sum()
+            total += len(label_ids)
+            
+        eval_loss = eval_loss / nb_eval_steps
+        return eval_loss, correct / total
+        self.model.train()
