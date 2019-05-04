@@ -190,8 +190,9 @@ class DeepTwistTrainer(Trainer):
             total += len(label_ids)
             
         eval_loss = eval_loss / nb_eval_steps
-        return eval_loss, correct / total
         self.model.train()
+        return eval_loss, correct / total
+        
             
 
 class KDTrainer(Trainer):
@@ -235,7 +236,7 @@ class KDTrainer(Trainer):
             logits = self.model(input_ids, segment_ids, input_mask, labels=None)
             
             # No regression support
-            loss = self.loss_fn(logits.softmax(dim=1), teacher_probs)
+            loss = self.loss_fn(logits, teacher_probs - teacher_probs.mean(dim=1).unsqueeze(-1))
                         
             if gradient_accumulation_steps > 1:
                 loss = loss / gradient_accumulation_steps
@@ -257,8 +258,8 @@ class KDTrainer(Trainer):
                 self.total_period_loss = 0
             self.counter += 1
 
-        self.model.load_state_dict(state_dict)
-        self.model.cuda()
+#         self.model.load_state_dict(state_dict)
+#         self.model.cuda()
         return self.validate()[0]
     
     
@@ -292,5 +293,5 @@ class KDTrainer(Trainer):
             total += len(label_ids)
             
         eval_loss = eval_loss / nb_eval_steps
-        return eval_loss, correct / total
         self.model.train()
+        return eval_loss, correct / total
