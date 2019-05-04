@@ -47,6 +47,20 @@ def weight_prune(state_dict, p=.2, tqdm=False):
         new_state_dict[key] = mat
     
     return new_state_dict
+
+def global_prune(state_dict, p=.2):
+    all_scalars = torch.cat([x.flatten() for x in state_dict.values()]).cpu()
+    scalars_np = all_scalars.abs().numpy()
+    thresh = np.quantile(scalars_np, p)
+
+    new_state_dict = OrderedDict()
+    
+    for key in state_dict.keys():
+        mat = state_dict[key]
+        mat[mat.abs() < thresh] = 0
+        new_state_dict[key] = mat
+        
+    return new_state_dict
         
 
 def binop_apply(s1, s2, op):
