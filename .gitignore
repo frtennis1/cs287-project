@@ -7,3 +7,4 @@
 *out
 .ipynb_checkpoints/*
 glue_data/*
+.DS_Store
