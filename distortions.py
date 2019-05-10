@@ -9,9 +9,10 @@ from operator import add, sub
 
 from sklearn.cluster import MiniBatchKMeans
 
+
 def svd_compress(state_dict, k=100, tqdm=False):
     new_state_dict = OrderedDict()
-    
+
     keys_iter = state_dict.keys()
     if tqdm:
         keys_iter = tqdm(keys_iter)
@@ -26,28 +27,28 @@ def svd_compress(state_dict, k=100, tqdm=False):
         else:
             recovered_mat = mat
 
-        new_state_dict[key] = recovered_mat 
-    
+        new_state_dict[key] = recovered_mat
+
     return new_state_dict
 
 def weight_prune(state_dict, p=.2, tqdm=False):
     new_state_dict = OrderedDict()
-    
+
     keys_iter = state_dict.keys()
     if tqdm:
         keys_iter = tqdm(keys_iter)
-    
+
     for key in keys_iter:
         mat = state_dict[key]
         abs_mat = mat.abs()
 
         np_abs_mat = abs_mat.cpu().numpy()
         thresh = np.percentile(np_abs_mat.flatten(), 100 * p)
-        
+
         mat[abs_mat < thresh] = 0
-        
+
         new_state_dict[key] = mat
-    
+
     return new_state_dict
 
 def quantization(state_dict, n_clusters=128):
@@ -83,7 +84,7 @@ def binop_apply(s1, s2, op):
 class to_bert:
     def __init__(self, base_model):
         self.base_model = base_model
-    
+
     def __call__(self, f, **kwargs):
         base_model = self.base_model
         def wrapped_f(current_model, **kwargs):
