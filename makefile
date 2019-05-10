@@ -47,5 +47,5 @@ pansy-test:
 	echo $$MY_VAR
 
 vm:
-	nohup jupyter lab > lab.nohup &
+	nohup jupyter lab > lab.nohup &; \
 	nohup tensorboard logdir=tensorboard_data &
