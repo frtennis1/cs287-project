@@ -1,8 +1,8 @@
 connect:
-	ssh -L 6006:localhost:6006 -L 8080:localhost:8888 -L 8081:localhost:8889 Megatron@40.114.38.172 -p 22
+	ssh -L 6006:localhost:6006 -L 8080:localhost:8888 -L 8081:localhost:8889 -R 52698:localhost:52698 Megatron@40.114.38.172 -p 22
 
 connect2:
-	ssh -L 6006:localhost:6006 -L 8080:localhost:8888 -L 8081:localhost:8889 Megatron@13.82.196.96 -p 22
+	ssh -L 6006:localhost:6006 -L 8080:localhost:8888 -L 8081:localhost:8889 -R 52698:localhost:52698 Megatron@13.82.196.96 -p 22
 
 
 train:
@@ -23,7 +23,7 @@ train:
 	  --report_frequency 100\
 	  --run_name "BERT_testing"\
 	  --tensorboard_log_dir "tensorboard_data"
-			
+
 test:
 	GLUE_DIR=glue_data; \
 	TASK_NAME=SST-2; \
