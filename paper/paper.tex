@@ -61,7 +61,6 @@ Example Structure:
 
 
 \section{Background}
-Deep Neurel Networks (DNNs) have become extremely large in size with growing complexities. A BERT base model has 110M parameters and takes 438 MB disk space to store. This makes it very hard to deploy those models on mobile devices, which in most cases have limited storage and RAM and lower computational resources. The challenge that we are facing is how to compress DNNs in size while keeping their predictive performance competitive with full model.
 
 % Example Structure:
 % \begin{itemize}
@@ -70,19 +69,23 @@ Deep Neurel Networks (DNNs) have become extremely large in size with growing com
 % \item What are the challenges/opportunities inherent to the data? (High dimensional, sparse, missing data, noise, structure, discrete/continuous, etc?)
 % \end{itemize}
 
+Deep Neurel Networks (DNNs) have become extremely large in size with growing complexities. A BERT base model has 110M parameters and takes 438 MB disk space to store. This makes it very hard to deploy those models on mobile devices, which in most cases have limited storage and RAM and lower computational resources. The challenge that we are facing is how to compress DNNs in size while keeping their predictive performance competitive with full model.
+
 \section{Related Work}
 
-Example Structure:
-\begin{itemize}
-\item What 3-5 papers have been published in this space?
-\item How do these  differ from your approach?
-\item What data or methodologies do each of these works use?
-\item How do you plan to compare to these methods?
-\end{itemize}
+% Example Structure:
+% \begin{itemize}
+% \item What 3-5 papers have been published in this space?
+% \item How do these  differ from your approach?
+% \item What data or methodologies do each of these works use?
+% \item How do you plan to compare to these methods?
+% \end{itemize}
 
-\cite{cheng2017survey}
+We are interested in compressing the language representation model BERT \cite{devlin2018bert}. It is the state-of-art result in many natural language processing tasks such as natural language inference, paraphrasing and named entity recognition.
 
+\cite{cheng2017survey} provides a comprehensive overview of the state-of-art methods to compress DNNs. Of the methods summarized by the paper, the ones that are of interest to our work are weight-pruning and quantization \cite{han2015deep}, and low-rank factorization \cite{denton2014exploiting}. Knowledge distillation, first proposed by \cite{bucilua2006model} as ``knowledge transfer'', was recently popularized by \cite{hinton2015distilling}. It differs from the previously mentioned methods since it compresses an existing model by replacing it with a simpler model that is trained on its outputs.
 
+DeepTwist, a end-to-end training framework, allows us to incorporate compression procedures into training \cite{lee2018deeptwist}. Under this framework, the model parameters are occasionally distorted during training time instead of only at the end. This framework has the benefit of simplified training procedure and faster convergence and reduced requirement for hyperparameter tuning. Experiment on MNIST dataset with DeepTwist shows that LeNet-5 and LeNet-300-100 models are able to retain predictive accuracy under high compression rate.
 
 \section{Model}
 
@@ -126,7 +129,6 @@ This is also a good place to reference a diagram such as Figure~\ref{fig:diagram
   \missingfigure[figheight=8cm]{}
   \caption{\label{fig:diagram} This is a good place to include a diagram showing how your model works. Examples include a graphical model or a neural network block diagram.}
 \end{figure}
-
 
 \section{Inference (or Training)}
 
