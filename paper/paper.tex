@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[11pt]{article}
 
 \usepackage{times}
 \usepackage{graphicx}
@@ -72,7 +72,15 @@ Example Structure:
 % \item What are the challenges/opportunities inherent to the data? (High dimensional, sparse, missing data, noise, structure, discrete/continuous, etc?)
 % \end{itemize}
 
-Deep Neurel Networks (DNNs) have become extremely large in size with growing complexities. A BERT base model has 110M parameters and takes 438 MB disk space to store. This makes it very hard to deploy those models on mobile devices, which in most cases have limited storage and RAM and lower computational resources. The challenge that we are facing is how to compress DNNs in size while keeping their predictive performance competitive with full model.
+Deep Neurel Networks (DNNs) have become extremely large in size with growing
+complexities. A BERT base model has 110M parameters and takes 438 MB disk space
+to store. This makes it very hard to deploy those models on mobile devices,
+which in most cases have limited storage and RAM and lower computational
+resources. As a result, we are not able to store multiple models for different
+tasks on mobile devices, and evaluating one single model also takes too much
+time due to computational capacity limit. The challenge that we are facing is
+how to compress DNNs in size while keeping their predictive performance
+competitive with full model. 
 
 \section{Related Work}
 
@@ -84,11 +92,28 @@ Deep Neurel Networks (DNNs) have become extremely large in size with growing com
 % \item How do you plan to compare to these methods?
 % \end{itemize}
 
-We are interested in compressing the language representation model BERT \citep{devlin2018bert}. It is the state-of-art result in many natural language processing tasks such as natural language inference, paraphrasing and named entity recognition.
+We are interested in compressing the language representation model BERT
+\citep{devlin2018bert}.  It is the state-of-art result in many natural language
+processing tasks  such as natural language inference, paraphrasing and named
+entity recognition.
 
-\citet{cheng2017survey} provides a comprehensive overview of the state-of-art methods to compress DNNs. Of the methods summarized by the paper, the ones that are of interest to our work are weight-pruning and quantization \citep{han2015deep}, and low-rank factorization \citep{denton2014exploiting}. Knowledge distillation, first proposed by \citet{bucilua2006model} as ``knowledge transfer'', was recently popularized by \citet{hinton2015distilling}. It differs from the previously mentioned methods since it compresses an existing model by replacing it with a simpler model that is trained on its outputs.
+\citet{cheng2017survey} provides a comprehensive overview of the state-of-art
+methods to compress DNNs. Of the methods summarized by the paper, the ones
+that are of interest to our work are weight-pruning and quantization
+\cite{han2015deep}, and low-rank factorization \cite{denton2014exploiting}.
+Knowledge distillation, first proposed by \cite{bucilua2006model} as
+``knowledge transfer'', was recently popularized by
+\cite{hinton2015distilling}. It differs from the previously mentioned methods
+since it compresses an existing model by replacing it with a simpler model
+that is trained on its outputs.
 
-DeepTwist, a end-to-end training framework, allows us to incorporate compression procedures into training \citep{lee2018deeptwist}. Under this framework, the model parameters are occasionally distorted during training time instead of only at the end. This framework has the benefit of simplified training procedure and faster convergence and reduced requirement for hyperparameter tuning. Experiment on MNIST dataset with DeepTwist shows that LeNet-5 and LeNet-300-100 models are able to retain predictive accuracy under high compression rate.
+DeepTwist, a end-to-end training framework, allows us to incorporate compression
+procedures into training \citep{lee2018deeptwist}. Under this framework, the
+model parameters are occasionally distorted during training time instead of only
+at the end. This framework has the benefit of simplified training procedure and
+faster convergence and reduced requirement for hyperparameter tuning. Experiment
+on MNIST dataset with DeepTwist shows that LeNet-5 and LeNet-300-100 models are
+able to retain predictive accuracy under high compression rate.
 
 \section{Model}
 \label{sec:model}
@@ -104,16 +129,16 @@ We decompose the subparts of the model into layers: \begin{align*}
 G_\bpsi &= g_{m}^{\bpsi_m} \circ \cdots \circ g_1^{\bpsi_1}.
 \end{align*}
 
-\subsection{DeepTwist-based Weight Distortions}
+% \subsection{DeepTwist-based Weight Distortions}
 
 
 Given training data $(\bm x_i, y_i)_{i=1}^N$, where $\bm x_i$ are one-hot
 encoded tokens, we train by solving the standard maximum likelihood problem
 where \[
-\min_{\btheta} \sum_{i=1}^N L\pr{y_i, F_\btheta(\bm x_i)}
+\min_{\btheta} \sum_{i=1}^N \ell\pr{y_i, F_\btheta(\bm x_i)}
 \]
-for some loss function specific to the task. For instance, $L$ is cross-entropy
-loss for a (multiclass) classification problem, and $L$ is mean-squared-error
+for some loss function specific to the task. For instance, $\ell$ is cross-entropy
+loss for a (multiclass) classification problem, and $\ell$ is mean-squared-error
 for a regression problem, which correspond to log-likelihoods in Categorical and
 Gaussian models, respectively. The innovation of DeepTwist-based training is
 perturbing the usual gradient-based optimization by repeatedly distorting the
@@ -128,7 +153,7 @@ In this section, we discuss a few methods for parameterizing $\distortion$.
 Generally, we may imagine a few special cases of distortion, we call a
 particular distortion \emph{distortion by layer} if it is applied per layer,
 i.e. \begin{align*}
-\distortion'(\btheta) = (&\distortion(\bphi_1),\ldots,\distortion(\bphi_n),\\
+\distortion'(\btheta) &= \\ (&\distortion(\bphi_1),\ldots,\distortion(\bphi_n),\\
 &\distortion(\bpsi_1),\ldots, \distortion(\bpsi_m)).
 \end{align*}
 We call a particular distortion \emph{pretrained-only} if \[
@@ -180,37 +205,48 @@ technique on the difference, and thus the \emph{difference} should be viewed
 (and is implemented) as a decorator to a conventional distortion technique. 
 
 
-\paragraph{Rank Reduction} If $\bvartheta$ is a matrix, then we may apply rank
+\paragraphdot{Rank Reduction} If $\bvartheta$ is a matrix, then we may apply
+rank
 reduction via singular value decomposition \[
 \bvartheta = U\Sigma V^\top
 \]
-where $\Sigma$ is a diagonal matrix, where $U \in $ 
+where $\Sigma$ is a diagonal matrix, where $U \in \R^{n\times n}, \Sigma\in \R^
+{n\times n}, V\in \R^{m\times n}$, and $\bvartheta \in \R^{n\times m}$.
 
 We distort via \[
-\rankreduce(\bvartheta) = \tilde U \tilde \Sigma \tilde V^\top,
+\rankreduce(\bvartheta; r) = \tilde U \tilde \Sigma \tilde V^\top,
 \]
 where $\tilde U, \tilde \Sigma, \tilde V$ are conforming matrices such that the
 smallest values on the spectrum $\Sigma$ is zeroed out, as well as corresponding
 values in $U,V$. If we keep only the $r$ largest spectral values, then we store
-$\tilde U, \tilde \Sigma$, an $n\times r$ matrix 
+$\tilde U \tilde \Sigma$, an $n\times r$ matrix, and $\tilde V$, an $m\times r$
+matrix. Thus, instead of storing $2nm$ floats, we may store $r(n+m)$, achieving
+a compression rate of \[
+\rho = \frac{r(n+m)}{2mn}.
+\]
+Note however, that storing matrices in this manner requires an additional
+matrix multiplication in evaluation time, since we have to compute the product
+$\tilde U \tilde \Sigma \tilde V$.
 
 
+% \subsection{Knowledge Distillation}
 
-Example Structure:
 
-\begin{itemize}
-\item What is the formal definition of your problem?
-\item What is the precise mathematical model you are using to represent it? In almost all cases this will use the probabilistic language from class, e.g.
-  \begin{equation}
-  z \sim {\cal N}(0, \sigma^2)\label{eq:1}
-\end{equation}
-But it may also be a neural network, or a non-probabilistic loss,
-\[ h_t \gets \mathrm{RNN}(x_{t}, h_{t-1} )\]
+% Example Structure:
 
-This is also a good place to reference a diagram such as Figure~\ref{fig:diagram}.
+% \begin{itemize}
+% \item What is the formal definition of your problem?
+% \item What is the precise mathematical model you are using to represent it? In almost all cases this will use the probabilistic language from class, e.g.
+%   \begin{equation}
+%   z \sim {\cal N}(0, \sigma^2)\label{eq:1}
+% \end{equation}
+% But it may also be a neural network, or a non-probabilistic loss,
+% \[ h_t \gets \mathrm{RNN}(x_{t}, h_{t-1} )\]
 
-\item What are the parameters or latent variables of this model that you plan on estimating or inferring? Be explicit. How many are there? Which are you assuming are given? How do these relate to the original problem description?
-\end{itemize}
+% This is also a good place to reference a diagram such as Figure~\ref{fig:diagram}.
+
+% \item What are the parameters or latent variables of this model that you plan on estimating or inferring? Be explicit. How many are there? Which are you assuming are given? How do these relate to the original problem description?
+% \end{itemize}
 
 
 
@@ -247,7 +283,8 @@ probabilities themselves because of disappearing gradients when the predicted
 probabilities are very close to 0 or 1.
 
 The benefits of training in this fashion have been empirically documented
-% TODO: paper on KD doing well?
+% TODO: paper on KD doing well? 
+\citep{hinton2015distilling}
 and have theoretical motivation. Our goal of any network is to learn the
 conditional distribution 
 \[ p(y_i = k \mid \bm{x}_i).\]
@@ -318,17 +355,41 @@ our teacher network and train a simpler model to emulate the predictions use
 
 
 \section{Methods}
+In this section, we briefly discuss our experimental setup. We mostly
+work with
+SST-2, a binary sentiment classification task in the GLUE multitask benchmark
+framework \citep{wang2018glue}. We also validate the model's
+performance with trial on the Quora Question Pair (QQP) task, which is a
+binary classification task for whether two questions are equivalent. We
+train with a maximum sequence length of 64 and batch size of 32 on the
+NC-6 and NC-12 virtual machines on Microsoft Azure. We use the basic 
+\texttt{BERT-base-uncased} model for our experimental results. We employ
+early stopping in training, with patience of 1 epoch, and early stopping is
+guided by validation error. 
 
-\begin{itemize}
-\item What are the exact details of the dataset that you used? (Number of data points / standard or non-standard / synthetic or real / exact form of the data)
+\subsection{DeepTwist}
+We implement the DeepTwist framework with default frequency of distortion
+every 10 batches. Additionally, we ensure that training ends on a
+distortion step, so that the model produced by training has compression
+benefits. For $\prune$ and $\diffprune$ distortions, we use a single
+pruning rate held fixed throughout training. 
 
-\item What are the exact details of the features you computed?
 
+\subsection{Knowledge Distillation}
+For knowledge distillation experiments, we use various configurations of
+the student network:
+\paragraphdot{LSTM} We use a one-layer LSTM network with hidden dimension
+$H=200$. We first embed the one-hot representation of tokens, and we feed
+the embeddings through an LSTM. We then map the last hidden state of the
+LSTM through a linear layer for classification. 
+\paragraphdot{CNN} We use an implementation\footnote{\url{https://github.com/jfilter/cnn-text-classification-pytorch/blob/master/cnn_text_classification/model.py}} 
+of \citet{kim2014convolutional} with kernel sizes $(3,4,5)$, hidden size
+$H=300$, no dropout, and $20$ kernels for each kernel size.\footnote{These
+are default in the implementation we used.} 
 
-\item How did you train or run inference? (Optimization method / hyperparameter settings / amount of time ran / what did you implement versus borrow / how were baselines computed).
-
-\item What are the exact details of the metric used?
-\end{itemize}
+For each model, we initialize the embedding layer of the model with the
+first $H$ dimensions of the corresponding embedding layer in pretrained
+BERT. 
 
 
 
