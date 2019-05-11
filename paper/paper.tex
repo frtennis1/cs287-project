@@ -12,6 +12,16 @@
 
 \usepackage{macros}
 
+\newcommand{\bert}{\operatorname{BERT}}
+\newcommand{\distortion}{\operatorname{Distortion}}
+\newcommand{\prune}{\operatorname{Prune}}
+\newcommand{\diffprune}{\operatorname{DiffPrune}}
+
+
+
+\newcommand{\btheta}{{\bm{\theta}}}
+\newcommand{\bphi}{{\bm{\phi}}}
+\newcommand{\bpsi}{{\bm{\psi}}}
 
 \icmltitlerunning{CS 287 Final Project Template}
 
@@ -74,6 +84,23 @@ Example Structure:
 
 
 \section{Model}
+
+We first set up some notation. Let $F_\btheta = G_\bpsi \circ \bert_\bphi$ be a
+transformed model where
+$\btheta = (\bphi, \bpsi)$ be parameters of the subparts of the model.
+$\bert_\bphi$ is a BERT model where the pretrained weights are $\bphi_0 = 
+(\bphi_0^i)_{i=1}^n$, and
+$G_\bpsi$ is additional layers for fine-tuning BERT, parameterized by $\bpsi$.
+We decompose the subparts of the model into layers: \begin{align*}
+\bert_\bphi &= f_{n}^{\bphi_n} \circ \cdots \circ f_1^{\bphi_1} \\
+G_\bpsi &= g_{m}^{\bpsi_m} \circ \cdots \circ g_1^{\bpsi_1}.
+\end{align*}
+
+\subsection{DeepTwist-based Weight Distortions}
+
+
+
+
 
 Example Structure:
 
