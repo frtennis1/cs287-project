@@ -92,6 +92,99 @@ such as natural language inference, paraphrasing and named entity recognition.
 
 DeepTwist, a end-to-end training framework, allows us to incorporate compression procedures into training \citep{lee2018deeptwist}. Under this framework, the model parameters are occasionally distorted during training time instead of only at the end. This framework has the benefit of simplified training procedure and faster convergence and reduced requirement for hyperparameter tuning. Experiment on MNIST dataset with DeepTwist shows that LeNet-5 and LeNet-300-100 models are able to retain predictive accuracy under high compression rate.
 
+\section{Inference (or Training)}
+\label{sec:training}
+
+
+\subsection{Knowledge Distillation}
+\label{subsec:kd}
+
+In this paper, we limit our purview to text classification tasks. Training
+neural-network-based systems for this task typically consists of a form of
+gradient descent based on a differentiable loss function which takes in the
+prediction for a given example and the correct label. That is, if we have
+training data $(\bm{x}_i, y_i)$ and model $f$, we would aim to minimize,
+\[ \ell(f(\bm{x_i}), y_i)\]
+where usually the loss function is taken to be Cross-Entropy loss. When we
+already have a model $f$ that performs well, we can leverage this training
+paradigm through a modification called \emph{knowledge distillation}. Given the
+large model that performs well, termed the \emph{teacher network}, we train a
+smaller network $g$, the \emph{student network}, by minimizing,
+\[ \ell(g(\bm{x_i}), f(\bm{x_i})).\]
+Here, we can no longer use Cross-Entropy loss because $f(\bm{x}_i)$ is a
+probability distribution rather than a specific label. However, we can take
+$\ell$ to be either mean-square error (MSE) between the probabilities in
+log-space, or Kullback-Leibler (KL) loss. We avoid MSE error on the
+probabilities themselves because of disappearing gradients when the predicted
+probabilities are very close to 0 or 1.
+
+The benefits of training in this fashion have been empirically documented
+% TODO: paper on KD doing well? 
+\citep{hinton2015distilling}
+and have theoretical motivation. Our goal of any network is to learn the
+conditional distribution 
+\[ p(y_i = k \mid \bm{x}_i).\]
+In traditional training, we do this by observing the draws $y_i$ from this
+distribution. However, to the extent that the teacher network prediction is a
+good approximation of the true conditional distribution, the student network can
+learn faster because it is being pushed toward predicting the de-noised
+expectation.
+
+To present a simplified example: if a neural network were trying to understand a
+coin flip, it would require a number of observations of heads and tails to
+conclude the underlying probability is 50\% toward either direction. However, if
+it is directly shown that the probability was 50\% each time, regardless of what
+the coin came up, it will in less time understand that the probability is always
+50\%.
+
+An additional benefit from knowledge distillation arises from BERT's
+pre-training. Because BERT is pre-trained on large amounts of unstructured data,
+it contains a powerful language model which likely would be impossible to learn
+from the specific task's data-set. To an extent, relevant features from this
+language model are what make BERT so powerful once it's fine-tuned. Training the
+student network on BERT's output thus allows some of this ``outside knowledge''
+to percolate toward the student network.
+
+To provide a concrete example of how this might work, suppose BERT captures from
+its pre-training that ``bad'', ``horrible,'' and ``terrible'' are approximate
+synonyms. In a sentiment task, these three words appear in three different
+sentences, two of which are negative, and one of which is positive. A fine-tuned
+BERT may provide a lower likelihood of being positive to the positive sentence
+than it would otherwise even if 
+
+
+% TODO: KD benefits
+
+For our knowledge distillation, we make use of a fine-tuned BERT on a task as
+our teacher network and train a simpler model to emulate the predictions use
+\nameref{sec:model}
+
+
+% TODO: talk about KD
+
+\subsection{Deep Twist}
+
+% TODO: talk about DeepTwist™
+
+
+\begin{comment}
+\begin{itemize}
+\item How do you plan on training your parameters / inferring the
+  states of your latent variables (MLE / MAP / Backprop / VI / EM / BP / ...)
+
+\item What are the assumptions implicit in this technique? Is it an approximation or exact? If it is an approximation what bound does it optimize?
+
+\item What is the explicit method / algorithm that you derive for learning these parameters?
+\end{itemize}
+\end{comment}
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \STATE{}
+  \end{algorithmic}
+  \caption{Your Pseudocode}
+\end{algorithm}
+
 \section{Model}
 \label{sec:model}
 
@@ -232,101 +325,6 @@ $\tilde U \tilde \Sigma \tilde V$.
   \missingfigure[figheight=8cm]{}
   \caption{\label{fig:diagram} This is a good place to include a diagram showing how your model works. Examples include a graphical model or a neural network block diagram.}
 \end{figure}
-
-\section{Inference (or Training)}
-\label{sec:training}
-
-
-\subsection{Knowledge Distillation}
-\label{subsec:kd}
-
-In this paper, we limit our purview to text classification tasks. Training
-neural-network-based systems for this task typically consists of a form of
-gradient descent based on a differentiable loss function which takes in the
-prediction for a given example and the correct label. That is, if we have
-training data $(\bm{x}_i, y_i)$ and model $f$, we would aim to minimize,
-\[ \ell(f(\bm{x_i}), y_i)\]
-where usually the loss function is taken to be Cross-Entropy loss. When we
-already have a model $f$ that performs well, we can leverage this training
-paradigm through a modification called \emph{knowledge distillation}. Given the
-large model that performs well, termed the \emph{teacher network}, we train a
-smaller network $g$, the \emph{student network}, by minimizing,
-\[ \ell(g(\bm{x_i}), f(\bm{x_i})).\]
-Here, we can no longer use Cross-Entropy loss because $f(\bm{x}_i)$ is a
-probability distribution rather than a specific label. However, we can take
-$\ell$ to be either mean-square error (MSE) between the probabilities in
-log-space, or Kullback-Leibler (KL) loss. We avoid MSE error on the
-probabilities themselves because of disappearing gradients when the predicted
-probabilities are very close to 0 or 1.
-
-The benefits of training in this fashion have been empirically documented
-% TODO: paper on KD doing well? 
-\citep{hinton2015distilling}
-and have theoretical motivation. Our goal of any network is to learn the
-conditional distribution 
-\[ p(y_i = k \mid \bm{x}_i).\]
-In traditional training, we do this by observing the draws $y_i$ from this
-distribution. However, to the extent that the teacher network prediction is a
-good approximation of the true conditional distribution, the student network can
-learn faster because it is being pushed toward predicting the de-noised
-expectation.
-
-To present a simplified example: if a neural network were trying to understand a
-coin flip, it would require a number of observations of heads and tails to
-conclude the underlying probability is 50\% toward either direction. However, if
-it is directly shown that the probability was 50\% each time, regardless of what
-the coin came up, it will in less time understand that the probability is always
-50\%.
-
-An additional benefit from knowledge distillation arises from BERT's
-pre-training. Because BERT is pre-trained on large amounts of unstructured data,
-it contains a powerful language model which likely would be impossible to learn
-from the specific task's data-set. To an extent, relevant features from this
-language model are what make BERT so powerful once it's fine-tuned. Training the
-student network on BERT's output thus allows some of this ``outside knowledge''
-to percolate toward the student network.
-
-To provide a concrete example of how this might work, suppose BERT captures from
-its pre-training that ``bad'', ``horrible,'' and ``terrible'' are approximate
-synonyms. In a sentiment task, these three words appear in three different
-sentences, two of which are negative, and one of which is positive. A fine-tuned
-BERT may provide a lower likelihood of being positive to the positive sentence
-than it would otherwise even if 
-
-
-% TODO: KD benefits
-
-For our knowledge distillation, we make use of a fine-tuned BERT on a task as
-our teacher network and train a simpler model to emulate the predictions use
-\nameref{sec:model}
-
-
-% TODO: talk about KD
-
-\subsection{Deep Twist}
-
-% TODO: talk about DeepTwist™
-
-
-\begin{comment}
-\begin{itemize}
-\item How do you plan on training your parameters / inferring the
-  states of your latent variables (MLE / MAP / Backprop / VI / EM / BP / ...)
-
-\item What are the assumptions implicit in this technique? Is it an approximation or exact? If it is an approximation what bound does it optimize?
-
-\item What is the explicit method / algorithm that you derive for learning these parameters?
-\end{itemize}
-\end{comment}
-
-
-
-\begin{algorithm}
-  \begin{algorithmic}
-    \STATE{}
-  \end{algorithmic}
-  \caption{Your Pseudocode}
-\end{algorithm}
 
 
 
