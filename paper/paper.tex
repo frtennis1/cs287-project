@@ -12,16 +12,19 @@
 
 \usepackage{macros}
 
+
 \newcommand{\bert}{\operatorname{BERT}}
 \newcommand{\distortion}{\operatorname{Distortion}}
 \newcommand{\prune}{\operatorname{Prune}}
 \newcommand{\diffprune}{\operatorname{DiffPrune}}
-
+\newcommand{\rankreduce}{\operatorname{RankReduce}}
 
 
 \newcommand{\btheta}{{\bm{\theta}}}
 \newcommand{\bphi}{{\bm{\phi}}}
 \newcommand{\bpsi}{{\bm{\psi}}}
+\newcommand{\bvartheta}{{\bm{\vartheta}}}
+
 
 \icmltitlerunning{CS 287 Final Project Template}
 
@@ -104,6 +107,92 @@ G_\bpsi &= g_{m}^{\bpsi_m} \circ \cdots \circ g_1^{\bpsi_1}.
 \subsection{DeepTwist-based Weight Distortions}
 
 
+Given training data $(\bm x_i, y_i)_{i=1}^N$, where $\bm x_i$ are one-hot
+encoded tokens, we train by solving the standard maximum likelihood problem
+where \[
+\min_{\btheta} \sum_{i=1}^N L\pr{y_i, F_\btheta(\bm x_i)}
+\]
+for some loss function specific to the task. For instance, $L$ is cross-entropy
+loss for a (multiclass) classification problem, and $L$ is mean-squared-error
+for a regression problem, which correspond to log-likelihoods in Categorical and
+Gaussian models, respectively. The innovation of DeepTwist-based training is
+perturbing the usual gradient-based optimization by repeatedly distorting the
+current weights to achieve compression objectives.
+
+Specifically, the DeepTwist framework presented in \Cref{sec:training} applies a
+distortion
+step for fixed intervals during training, where \[
+\btheta \gets \distortion(\btheta). 
+\]
+In this section, we discuss a few methods for parameterizing $\distortion$.
+Generally, we may imagine a few special cases of distortion, we call a
+particular distortion \emph{distortion by layer} if it is applied per layer,
+i.e. \begin{align*}
+\distortion'(\btheta) = (&\distortion(\bphi_1),\ldots,\distortion(\bphi_n),\\
+&\distortion(\bpsi_1),\ldots, \distortion(\bpsi_m)).
+\end{align*}
+We call a particular distortion \emph{pretrained-only} if \[
+\distortion'(\btheta) = \distortion(\bphi).
+\]
+
+We list a few methods of parameterizing the distortion step. 
+\paragraphdot{Pruning} Consider a parameter vector $\bvartheta$, let
+  $t_p$ be the $p$-th quantile of the vector $\bvartheta$. Then \[
+  \prune(\bvartheta; p) = \one(|\bvartheta| > t_p) \odot \bvartheta
+  \]
+  be the vector where values in $\bvartheta$ below $t_p$ are zeroed. 
+  
+  Pruning is an extremely simple procedure. When $p$ is large, say, $p=0.99$, we
+  may take advantage of sparsity of the resulting model by saving locations of
+  nonzero entries, and thus reducing the model size in memory. However, such
+  compression does not come without potential sacrifices to computational speed,
+  as computation needed to be carried out on sparse data structures, which may
+  not effectively make use of standard hardware. 
+  
+  Pruning is an out-of-the-box procedure that works with any models. However, as
+  a price of the generality, pruning fails to be tailored to the nature of BERT
+  being a pre-trained model. Suppose the pretrained weights $\bphi_0 $ capture
+  certain structure of language, then dramatic distortions to $\bphi_0$
+  essentially discards the information, especially early in the training loop.
+  We may partially remedy this issue by either using a dynamic pruning rate,
+  where pruning rate is small early in the training loop or by using
+  layer-specific pruning rates, with layers in $\bert$ having a lower pruning
+  rate than layers in $G$. 
+  
+  A direct approach to taking advantage of pretrained models, however, is 
+  \emph{difference pruning}, where we ensure that
+  the difference between the model and a pretrained model is sparse.
+  Effectively, difference pruning ensures a form of weight sharing between
+  various BERT-based models for different tasks. 
+  
+\paragraphdot{Difference Pruning} Consider some pretrained weights
+$\bvartheta_0$, define \[
+\diffprune(\bvartheta; \bvartheta_0, p ) = \bvartheta_0 + \prune(\bvartheta -
+\bvartheta_0 ; p). 
+\]
+Observe that difference pruning provides no compression benefits when there is
+only one fine-tuning task; however, when the number of potential tasks is large,
+we only need to save $\btheta_0$ and the sparse matrix $\btheta - \btheta_0,$
+and $\btheta_0$ is shared across tasks.
+
+Observe that we can transform any reduction technique by applying the reduction
+technique on the difference, and thus the \emph{difference} should be viewed 
+(and is implemented) as a decorator to a conventional distortion technique. 
+
+
+\paragraph{Rank Reduction} If $\bvartheta$ is a matrix, then we may apply rank
+reduction via singular value decomposition \[
+\bvartheta = U\Sigma V^\top
+\]
+where $\Sigma$ is a diagonal matrix, where $U \in $ 
+
+We distort via \[
+\rankreduce(\bvartheta) = \tilde U \tilde \Sigma \tilde V^\top,
+\]
+where $\tilde U, \tilde \Sigma, \tilde V$ are conforming matrices such that the
+smallest values on the spectrum $\Sigma$ is zeroed out, as well as corresponding
+values in $U,V$. If we keep only the $r$ largest spectral values, then we store
+$\tilde U, \tilde \Sigma$, an $n\times r$ matrix 
 
 
 
