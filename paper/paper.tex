@@ -131,6 +131,38 @@ This is also a good place to reference a diagram such as Figure~\ref{fig:diagram
 \end{figure}
 
 \section{Inference (or Training)}
+\label{sec:training}
+
+
+\subsection{Knowledge Distillation}
+\label{subsec:kd}
+
+In this paper, we limit our purview to text classification tasks. Training
+neural-network-based systems for this task typically consists of a form of
+gradient descent based on a differentiable loss function which takes in the
+prediction for a given example and the correct label. That is, if we have
+training data $(\bm{x}_i, y_i)$ and model $f$, we would aim to minimize,
+\[ \ell(f(\bm{x_i}), y_i)\]
+where usually the loss function is taken to be Cross-Entropy loss. When we
+already have a model $f$ that performs well, we can leverage this training
+paradigm through a modification called \emph{knowledge distillation}. Given the
+large model that performs well, termed the \emph{teacher network}, we train a
+smaller network $g$, the \emph{student network}, by minimizing,
+\[ \ell(g(\bm{x_i}), f(\bm{x_i})).\]
+Here, we can no longer use Cross-Entropy loss because $f(\bm{x}_i)$ is a
+probability distribution rather than a specific label. However, we can take
+$\ell$ to be either mean-square error (MSE) between the probabilities in
+log-space, or Kullback-Leibler (KL) loss. We avoid MSE error on the
+probabilities themselves because of disappearing gradients when the predicted
+probabilities are very close to 0 or 1.
+
+
+% TODO: talk about KD
+
+\subsection{Deep Twist}
+
+% TODO: talk about DeepTwist™
+
 
 \begin{comment}
 \begin{itemize}
