@@ -191,7 +191,7 @@ where $\Sigma$ is a diagonal matrix, where $U \in \R^{n\times n}, \Sigma\in \R^
 {n\times n}, V\in \R^{m\times n}$, and $\bvartheta \in \R^{n\times m}$.
 
 We distort via \[
-\rankreduce(\bvartheta) = \tilde U \tilde \Sigma \tilde V^\top,
+\rankreduce(\bvartheta; r) = \tilde U \tilde \Sigma \tilde V^\top,
 \]
 where $\tilde U, \tilde \Sigma, \tilde V$ are conforming matrices such that the
 smallest values on the spectrum $\Sigma$ is zeroed out, as well as corresponding
@@ -332,17 +332,41 @@ our teacher network and train a simpler model to emulate the predictions use
 
 
 \section{Methods}
+In this section, we briefly discuss our experimental setup. We mostly
+work with
+SST-2, a binary sentiment classification task in the GLUE multitask benchmark
+framework \citep{wang2018glue}. We also validate the model's
+performance with trial on the Quora Question Pair (QQP) task, which is a
+binary classification task for whether two questions are equivalent. We
+train with a maximum sequence length of 64 and batch size of 32 on the
+NC-6 and NC-12 virtual machines on Microsoft Azure. We use the basic 
+\texttt{BERT-base-uncased} model for our experimental results. We employ
+early stopping in training, with patience of 1 epoch, and early stopping is
+guided by validation error. 
 
-\begin{itemize}
-\item What are the exact details of the dataset that you used? (Number of data points / standard or non-standard / synthetic or real / exact form of the data)
+\subsection{DeepTwist}
+We implement the DeepTwist framework with default frequency of distortion
+every 10 batches. Additionally, we ensure that training ends on a
+distortion step, so that the model produced by training has compression
+benefits. For $\prune$ and $\diffprune$ distortions, we use a single
+pruning rate held fixed throughout training. 
 
-\item What are the exact details of the features you computed?
 
+\subsection{Knowledge Distillation}
+For knowledge distillation experiments, we use various configurations of
+the student network:
+\paragraphdot{LSTM} We use a one-layer LSTM network with hidden dimension
+$H=200$. We first embed the one-hot representation of tokens, and we feed
+the embeddings through an LSTM. We then map the last hidden state of the
+LSTM through a linear layer for classification. 
+\paragraphdot{CNN} We use an implementation\footnote{\url{https://github.com/jfilter/cnn-text-classification-pytorch/blob/master/cnn_text_classification/model.py}} 
+of \citet{kim2014convolutional} with kernel sizes $(3,4,5)$, hidden size
+$H=300$, no dropout, and $20$ kernels for each kernel size.\footnote{These
+are default in the implementation we used.} 
 
-\item How did you train or run inference? (Optimization method / hyperparameter settings / amount of time ran / what did you implement versus borrow / how were baselines computed).
-
-\item What are the exact details of the metric used?
-\end{itemize}
+For each model, we initialize the embedding layer of the model with the
+first $H$ dimensions of the corresponding embedding layer in pretrained
+BERT. 
 
 
 
