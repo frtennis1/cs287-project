@@ -88,6 +88,7 @@ We are interested in compressing the language representation model BERT \cite{de
 DeepTwist, a end-to-end training framework, allows us to incorporate compression procedures into training \cite{lee2018deeptwist}. Under this framework, the model parameters are occasionally distorted during training time instead of only at the end. This framework has the benefit of simplified training procedure and faster convergence and reduced requirement for hyperparameter tuning. Experiment on MNIST dataset with DeepTwist shows that LeNet-5 and LeNet-300-100 models are able to retain predictive accuracy under high compression rate.
 
 \section{Model}
+\label{sec:model}
 
 We first set up some notation. Let $F_\btheta = G_\bpsi \circ \bert_\bphi$ be a
 transformed model where
@@ -155,6 +156,46 @@ $\ell$ to be either mean-square error (MSE) between the probabilities in
 log-space, or Kullback-Leibler (KL) loss. We avoid MSE error on the
 probabilities themselves because of disappearing gradients when the predicted
 probabilities are very close to 0 or 1.
+
+The benefits of training in this fashion have been empirically documented
+% TODO: paper on KD doing well?
+and have theoretical motivation. Our goal of any network is to learn the
+conditional distribution 
+\[ p(y_i = k \mid \bm{x}_i).\]
+In traditional training, we do this by observing the draws $y_i$ from this
+distribution. However, to the extent that the teacher network prediction is a
+good approximation of the true conditional distribution, the student network can
+learn faster because it is being pushed toward predicting the de-noised
+expectation.
+
+To present a simplified example: if a neural network were trying to understand a
+coin flip, it would require a number of observations of heads and tails to
+conclude the underlying probability is 50\% toward either direction. However, if
+it is directly shown that the probability was 50\% each time, regardless of what
+the coin came up, it will in less time understand that the probability is always
+50\%.
+
+An additional benefit from knowledge distillation arises from BERT's
+pre-training. Because BERT is pre-trained on large amounts of unstructured data,
+it contains a powerful language model which likely would be impossible to learn
+from the specific task's data-set. To an extent, relevant features from this
+language model are what make BERT so powerful once it's fine-tuned. Training the
+student network on BERT's output thus allows some of this ``outside knowledge''
+to percolate toward the student network.
+
+To provide a concrete example of how this might work, suppose BERT captures from
+its pre-training that ``bad'', ``horrible,'' and ``terrible'' are approximate
+synonyms. In a sentiment task, these three words appear in three different
+sentences, two of which are negative, and one of which is positive. A fine-tuned
+BERT may provide a lower likelihood of being positive to the positive sentence
+than it would otherwise even if 
+
+
+% TODO: KD benefits
+
+For our knowledge distillation, we make use of a fine-tuned BERT on a task as
+our teacher network and train a simpler model to emulate the predictions use
+\nameref{sec:model}
 
 
 % TODO: talk about KD
