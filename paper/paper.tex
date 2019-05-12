@@ -43,9 +43,14 @@
 
 \begin{abstract}
   \begin{itemize}
-  \item This document describes the expected style, structure, and rough proportions for your final project write-up.
-  \item While you are free to break from this structure, consider it a strong prior for our expectations of the final report.
-\item Length is a hard constraint. You are only allowed max \textbf{8 pages} in this format. While you can include supplementary material, it will not be factored into the grading process. It is your responsibility to convey the main contributions of the work in the length given.
+  \item This document describes the expected style, structure, and rough
+  proportions for your final project write-up.
+  \item While you are free to break from this structure, consider it a strong
+  prior for our expectations of the final report.
+  \item Length is a hard constraint. You are only allowed max \textbf{8 pages}
+  in this format. While you can include supplementary material, it will not be
+  factored into the grading process. It is your responsibility to convey the
+  main contributions of the work in the length given.
   \end{itemize}
 
 
@@ -55,6 +60,7 @@
 \section{Introduction}
 \label{sec:introduction}
 
+<<<<<<< HEAD
 % Example Structure:
 % \begin{itemize}
 % \item What is the problem of interest and what (high-level) are the current best methods for solving it?
@@ -62,7 +68,7 @@
 % \item Preview your research process, list the contributions you made, and summarize your experimental findings.
 % \end{itemize}
 
-Deep Neurel Networks (DDNs) have evolved to the state-of-art for many tasks in
+Deep Neural Networks (DDNs) have evolved to the state-of-art for many tasks in
 language modeling. In the meantime, they have become increasingly large in
 size, due to both pre-trained embeddings and deeper networks. However, in
 order to deploy the models on more resource-conscious devices efficiently,
@@ -84,14 +90,15 @@ proposed weight-sharing method Difference Pruning
 
 attempt kd but does not work well
 
-
 \section{Background}
 
 % Example Structure:
 % \begin{itemize}
 % \item What information does a non-expert need to know about the problem domain?
 % \item What data exists for this problem?
-% \item What are the challenges/opportunities inherent to the data? (High dimensional, sparse, missing data, noise, structure, discrete/continuous, etc?)
+% \item What are the challenges/opportunities inherent to the data? (High
+% dimensional, sparse, missing data, noise, structure, discrete/continuous,
+% etc?)
 % \end{itemize}
 
 DNNs have become extremely large in size with growing complexities. A BERT
@@ -228,9 +235,11 @@ our teacher network and train a simpler model to emulate the predictions use
 \item How do you plan on training your parameters / inferring the
   states of your latent variables (MLE / MAP / Backprop / VI / EM / BP / ...)
 
-\item What are the assumptions implicit in this technique? Is it an approximation or exact? If it is an approximation what bound does it optimize?
+\item What are the assumptions implicit in this technique? Is it an
+approximation or exact? If it is an approximation what bound does it optimize?
 
-\item What is the explicit method / algorithm that you derive for learning these parameters?
+\item What is the explicit method / algorithm that you derive for learning these
+parameters?
 \end{itemize}
 \end{comment}
 
@@ -362,7 +371,8 @@ $\tilde U \tilde \Sigma \tilde V$.
 
 % \begin{itemize}
 % \item What is the formal definition of your problem?
-% \item What is the precise mathematical model you are using to represent it? In almost all cases this will use the probabilistic language from class, e.g.
+% \item What is the precise mathematical model you are using to represent it? In
+% almost all cases this will use the probabilistic language from class, e.g.
 %   \begin{equation}
 %   z \sim {\cal N}(0, \sigma^2)\label{eq:1}
 % \end{equation}
@@ -371,7 +381,9 @@ $\tilde U \tilde \Sigma \tilde V$.
 
 % This is also a good place to reference a diagram such as Figure~\ref{fig:diagram}.
 
-% \item What are the parameters or latent variables of this model that you plan on estimating or inferring? Be explicit. How many are there? Which are you assuming are given? How do these relate to the original problem description?
+% \item What are the parameters or latent variables of this model that you plan
+% on estimating or inferring? Be explicit. How many are there? Which are you
+% assuming are given? How do these relate to the original problem description?
 % \end{itemize}
 
 
@@ -379,7 +391,9 @@ $\tilde U \tilde \Sigma \tilde V$.
 % \begin{figure}
 %   \centering
 %   \missingfigure[figheight=8cm]{}
-%   \caption{\label{fig:diagram} This is a good place to include a diagram showing how your model works. Examples include a graphical model or a neural network block diagram.}
+%   \caption{\label{fig:diagram} This is a good place to include a diagram
+%   showing how your model works. Examples include a graphical model or a neural
+%   network block diagram.}
 % \end{figure}
 
 % \subsection{Knowledge Distillation}
@@ -389,7 +403,8 @@ $\tilde U \tilde \Sigma \tilde V$.
 
 % \begin{itemize}
 % \item What is the formal definition of your problem?
-% \item What is the precise mathematical model you are using to represent it? In almost all cases this will use the probabilistic language from class, e.g.
+% \item What is the precise mathematical model you are using to represent it? In
+% almost all cases this will use the probabilistic language from class, e.g.
 %   \begin{equation}
 %   z \sim {\cal N}(0, \sigma^2)\label{eq:1}
 % \end{equation}
@@ -398,7 +413,9 @@ $\tilde U \tilde \Sigma \tilde V$.
 
 % This is also a good place to reference a diagram such as Figure~\ref{fig:diagram}.
 
-% \item What are the parameters or latent variables of this model that you plan on estimating or inferring? Be explicit. How many are there? Which are you assuming are given? How do these relate to the original problem description?
+% \item What are the parameters or latent variables of this model that you plan
+% on estimating or inferring? Be explicit. How many are there? Which are you
+% assuming are given? How do these relate to the original problem description?
 % \end{itemize}
 
 
@@ -406,7 +423,9 @@ $\tilde U \tilde \Sigma \tilde V$.
 % \begin{figure}
 %   \centering
 %   \missingfigure[figheight=8cm]{}
-%   \caption{\label{fig:diagram} This is a good place to include a diagram showing how your model works. Examples include a graphical model or a neural network block diagram.}
+%   \caption{\label{fig:diagram} This is a good place to include a diagram
+%   showing how your model works. Examples include a graphical model or a neural
+%   network block diagram.}
 % \end{figure}
 
 
@@ -434,16 +453,16 @@ pruning rate held fixed throughout training.
 
 
 \subsection{Knowledge Distillation}
-For knowledge distillation experiments, we use various configurations of
-the student network:
-\paragraphdot{LSTM} We use a one-layer LSTM network with hidden dimension
-$H=200$. We first embed the one-hot representation of tokens, and we feed
-the embeddings through an LSTM. We then map the last hidden state of the
-LSTM through a linear layer for classification. 
-\paragraphdot{CNN} We use an implementation\footnote{\url{https://github.com/jfilter/cnn-text-classification-pytorch/blob/master/cnn_text_classification/model.py}} 
+
+For knowledge distillation experiments, we use various configurations of the
+student network: \paragraphdot{LSTM} We use a one-layer LSTM network with hidden
+dimension $H=200$. We first embed the one-hot representation of tokens, and we
+feed the embeddings through an LSTM. We then map the last hidden state of the
+LSTM through a linear layer for classification.  \paragraphdot{CNN} We use an
+implementation\footnote{\url{https://github.com/jfilter/cnn-text-classification-pytorch/blob/master/cnn_text_classification/model.py}}
 of \citet{kim2014convolutional} with kernel sizes $(3,4,5)$, hidden size
-$H=300$, no dropout, and $20$ kernels for each kernel size.\footnote{These
-are default in the implementation we used.} 
+$H=300$, no dropout, and $20$ kernels for each kernel size.\footnote{These are
+default in the implementation we used.} 
 
 For each model, we initialize the embedding layer of the model with the
 first $H$ dimensions of the corresponding embedding layer in pretrained
@@ -454,15 +473,18 @@ BERT.
 \section{Results}
 
 \begin{itemize}
-\item What were the results comparing previous work / baseline systems / your systems on the main task?
+\item What were the results comparing previous work / baseline systems / your
+systems on the main task?
 \item What were the secondary results comparing the variants of your system?
-\item This section should be fact based and relatively dry. What happened, what was significant?
+\item This section should be fact based and relatively dry. What happened, what
+was significant?
 \end{itemize}
 
 % \begin{table*}
 %   \centering
 %   \missingfigure{}
-%   \caption{This is usually a table. Tables with numbers are generally easier to read than graphs, so prefer when possible.}
+%   \caption{This is usually a table. Tables with numbers are generally easier
+%   to read than graphs, so prefer when possible.}
 %   \label{fig:mainres}
 % \end{table*}
 
@@ -547,7 +569,9 @@ Things to say about KD
 
 \begin{itemize}
 \item What conclusions can you draw from the results section?
-\item Is there further analysis you can do into the results of the system? Here is a good place to include visualizations, graphs, qualitative analysis of your results.
+\item Is there further analysis you can do into the results of the system? Here
+is a good place to include visualizations, graphs, qualitative analysis of your
+results.
 
 \item  What questions remain open? What did you think might work, but did not?
 \end{itemize}
