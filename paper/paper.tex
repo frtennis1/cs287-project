@@ -562,10 +562,13 @@ was significant?
 4 &          kd &   CNN &   $0.423$ &   $0.834$ \\
 \bottomrule
 \end{tabular}
-
+\label{tbl:kdresults}
 \end{table}
 
 \section{Discussion}
+
+
+
 Things to say about DeepTwist
 \begin{itemize}
   \item Stratified prune better
@@ -583,6 +586,25 @@ Things to say about KD
   \item LSTM weird/CNN incredibly noisy
   \item \TODO{compare}
 \end{itemize}
+
+When compared to the performance of a fine-tuned BERT on SST-2, our Knowledge
+Distillation results---displayed in \cref{tbl:kdresults}---fall short. However,
+it is important to note the student networks are also much smaller than BERT. To
+isolate the effect of KD, we compare the performance of
+\citet{kim2014convolutional}'s CNN trained on the correct labels versus the BERT
+probabilities. This suggests a modest performance benefit of two percentage
+points in validation accuracy. However, we see no evidence of training being
+sped up by using KD.
+
+We also identify some curious behavior in the KD training curves. When training
+the LSTM on the BERT outputs, neither training loss nor validation loss decrease
+at first. In fact, they stay approximately constant for a couple of epochs. Only
+after this prolonged period does loss abruptly start going down, producing a
+normal curve from that point forward. We find this remarkably puzzling. We
+hypothesize this may be the effect of our adaptive learning rate starting out
+too low and taking multiple epochs to grow to a point where it can meaningfully
+update parameters. 
+% TODO: include this graph -- screenshot from tensorboard?
 
 \begin{itemize}
 \item What conclusions can you draw from the results section?
