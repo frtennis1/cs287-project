@@ -595,8 +595,14 @@ at high prune rates. Pruning with a global threshold rather than in a
 stratified way produces distinctly worse results. We suspect this is due to
 weights in different layers having different magnitudes, making a global
 threshold have an undue effect on layers whose weights tend to be smaller. We
-confirm this heterogeneity in 
-% TODO: include box-plots of weights
+confirm this heterogeneity in \cref{fig:weightsbylayer}.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=.5\textwidth]{../figs/value_by_layer.pdf}
+\caption{Weight distributions for five most/least variable layers}
+\label{fig:weightsbylayer}
+\end{figure}
 
 Our non-difference distortions are more sensitive to the compression parameter
 (whether prune rate or SVD rank). We find it difficult to achieve performance
@@ -640,6 +646,14 @@ hypothesize this may be the effect of our adaptive learning rate starting out
 too low and taking multiple epochs to grow to a point where it can meaningfully
 update parameters. 
 % TODO: include this graph -- screenshot from tensorboard?
+
+\begin{figure*}[tb]
+\centering
+\includegraphics{../figs/kd_lstm_training.png}
+\caption{Training loss (left), val. loss (middle), and val. accuracy
+(right) for LSTM KD}
+\label{fig:<+label+>}
+\end{figure*}<++>
 
 % \begin{itemize}
 % \item What conclusions can you draw from the results section?
