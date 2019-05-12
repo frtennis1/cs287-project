@@ -77,23 +77,28 @@
 % \item Preview your research process, list the contributions you made, and summarize your experimental findings.
 % \end{itemize}
 
-Deep Neural Networks (DDNs) have evolved to the state-of-art for many tasks in
-language modeling. In the meantime, they have become increasingly large in
-size, due to both pre-trained embeddings and deeper networks. However, in
-order to deploy the models on more resource-conscious devices efficiently,
+Deep Neural Networks (DDNs) have become the state-of-art for many tasks in
+language modeling. At the same time, they have become progressively larger in
+size, due to both pre-trained embeddings and deeper networks.
+% TODO: how do pre-trained embeddings make networks larger? -FR
+However, in order to deploy the models on more resource-constrained devices,
 such as mobile devices or even older personal laptops, as opposed to on cloud
 virtual machines, it is crucial to reduce the size of the models.
 
 Previous work has had a lot of success in computer vision tasks.
 \citet{han2015deep} was able to reduce the size of AlexNet by 35$\times$ and
-the size of VGG-16 by 49$\times$ without loss of accuracy. Recently, similar
-compression techniques were applied by \citet{cheong2014transformer} on
-Transformers and reduced the size by a factor of 5.85 while retaining 98.43\%
-of the performance. To the best of our knowledge, compressing language models
-remains an under-studied field.
+the size of VGG-16 by 49$\times$ without loss of accuracy.
+% TODO: this isn't computer vision, right? -FR
+Recently, similar compression techniques were applied by
+\citet{cheong2014transformer} on Transformers and reduced the size by a factor
+of 5.85 while retaining 98.43\% of the performance. To the best of our
+knowledge, compressing language models remains an under-studied field.
 
-In this paper, we proved that DeepTwist framework works well on compressing
-language models with pruning. {\color{red} TODO: prune99 result}.
+% TODO: should we mention the high-level strategies these papers use to compress
+% their respective models? -FR
+
+In this paper, we demonstrate that the DeepTwist framework works well on
+compressing language models with pruning. {\color{red} TODO: prune99 result}.
 
 proposed weight-sharing method Difference Pruning
 
