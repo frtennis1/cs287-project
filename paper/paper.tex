@@ -217,7 +217,7 @@ nowhere else.
 For our knowledge distillation, we make use of a fine-tuned BERT on a task as
 our teacher network and train a simpler model to emulate the predictions. For
 the student network, we use both a CNN and an LSTM, specified further in
-\nameref{sec:model}.
+\cref{sec:model}.
 
 \subsection{Deep Twist}
 
@@ -227,22 +227,23 @@ in any way. We may, however, wish to directly compress a model whose
 architecture we've had success with.
 
 To this end, we follow the framework put forward by \citet{lee2018deeptwist},
-\emph{DeepTwist}.
-
-
-% TODO: talk about DeepTwist™
+\emph{DeepTwist}, whose training loop is characterized by \cref{algo:deeptwist}.
+Training of the model closely resembles SGD with one important modification:
+every $S_d$ batches, the model weights are transformed by a \emph{distortion}
+function. 
 
 \begin{algorithm}
   \begin{algorithmic}
     \STATE{$n \leftarrow$ number of batches per epoch}
     \STATE{$\theta \leftarrow$ initialization of model parameters}
     \STATE{$k \leftarrow$ number of epochs to train}
+    \STATE{$S_d \leftarrow$ distortion step}
     \FOR{$i=0$ to $k \cdot n$}
       \STATE{batch $\leftarrow$ batches[$i \pmod n$]}
       \STATE{$\theta \leftarrow \theta - \eta \nabla \ell(\theta,
       \text{batch})$}
       \COMMENT{gradient step}
-      \IF{$i \equiv 0 \pmod d$}
+      \IF{$i \equiv 0 \pmod{S_d}$}
         \STATE{$\theta \leftarrow \distortion(\theta)$}
       \ENDIF
     \ENDFOR
@@ -251,6 +252,19 @@ To this end, we follow the framework put forward by \citet{lee2018deeptwist},
   \caption{DeepTwist Training Loop}
   \label{algo:deeptwist}
 \end{algorithm}
+
+We have significant flexibility in picking a distortion function, but in order
+to be useful, it must provide compression benefits. That is, the image of the
+distortion function should have a parameterization that takes less space in
+memory than then range of all possible $\theta$s. For example, if $\theta \in
+\mathbb{R}^{m,n}$, and the distortion produces a matrix of rank 1, then any
+distorted matrix could be uniquely identified by $\theta' \in \mathbb{R}^{n+m}$
+through a matrix factorization.
+
+It is important to note that while $\theta$ will be compressible immediately
+after a distortion step, there is no guarantee that it will remain so after some
+gradient steps. In fact, almost surely it will not be. Thus, we also enforce
+that the process ends on a distortion step.
 
 \section{Model}
 \label{sec:model}
