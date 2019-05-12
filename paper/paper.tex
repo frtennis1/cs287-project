@@ -79,30 +79,40 @@
 
 Deep Neural Networks (DDNs) have become the state-of-art for many tasks in
 language modeling. At the same time, they have become progressively larger in
-size, due to both pre-trained embeddings and deeper networks.
-% TODO: how do pre-trained embeddings make networks larger? -FR
-However, in order to deploy the models on more resource-constrained devices,
-such as mobile devices or even older personal laptops, as opposed to on cloud
-virtual machines, it is crucial to reduce the size of the models.
+size, due to both larger out-of-box pre-trained embeddings and deeper
+networks. However, in order to deploy the models on more resource-constrained
+devices, such as mobile devices or even older personal laptops, as opposed to
+on cloud virtual machines, it is crucial to reduce the size of the models.
 
 Previous work has had a lot of success in computer vision tasks.
-\citet{han2015deep} was able to reduce the size of AlexNet by 35$\times$ and
-the size of VGG-16 by 49$\times$ without loss of accuracy.
-% TODO: this isn't computer vision, right? -FR
-Recently, similar compression techniques were applied by
-\citet{cheong2014transformer} on Transformers and reduced the size by a factor
-of 5.85 while retaining 98.43\% of the performance. To the best of our
-knowledge, compressing language models remains an under-studied field.
+\citet{han2015deep} was able to combine pruning, quantization and Huffman
+coding to reduce the size of AlexNet by 35$\times$ and the size of VGG-16 by
+49$\times$ without loss of accuracy. Recently, similar compression techniques
+were applied by \citet{cheong2014transformer} on language models, Transformers
+in specific, and reduced the size by a factor of 5.85 while retaining 98.43\%
+of the performance. To the best of our knowledge, compressing language models
+still remains an under-studied field.
 
-% TODO: should we mention the high-level strategies these papers use to compress
-% their respective models? -FR
+In this paper, we demonstrate that the DeepTwist framework
+\citep{lee2018deeptwist} is applicable to compressing fine-tuned BERT
+\citep{devlin2018bert} on multiclass classification problems in addition to
+computer vision tasks, though the drop in performance is less negligible.
+Knowledge distillation also achieves the compression objective with more than
+desired decrease in predictive accuracy.
 
-In this paper, we demonstrate that the DeepTwist framework works well on
-compressing language models with pruning. {\color{red} TODO: prune99 result}.
+We used two of the GLUE datasets SST-2 and QQP. We ran most of the experiments
+on SST-2, a binary sentiment classification task on single-sentence movie
+reviews. We validated the results on QQP, a binary classification task for
+whether two questions asked on Quora are semantically equivalent.
 
-proposed weight-sharing method Difference Pruning
-
-attempt kd but does not work well
+The most important contribution of this paper is that we proposed a new
+weight-sharing method called ``Difference Pruning'' which imposes constraint on
+the sparcity of weight difference with the pre-trained BERT model. While
+uncompressed fine-tuned BERT model achieves 92.9\% validation accuracy on
+SST-2, the Difference Pruning model that keeps 99\% of the pre-trained BERT
+weights achieves 91.3\% on the validation set. This enables multiple language
+modeling tasks to share the weights of pre-trained BERT and each incurs minimal
+extra storage space requirements.
 
 \section{Background}
 
@@ -130,9 +140,6 @@ devices and can drain batteries significantly.
 The challenge that we are facing is therefore how to compress DNNs in size
 while keeping their predictive performance competitive with full model.
 
-% Though these neural networks are very powerful, the
-% large number of weights consumes considerable storage and memory bandwidth. For example, the AlexNet Caffemodel is over 200MB, and the VGG-16 Caffemodel is over 500MB (BVLC). This makes it difficult to deploy deep neural networks on mobile system.
-% First, for many mobile-first companies such as Baidu and Facebook, various apps are updated via different app stores, and they are very sensitive to the size of the binary files. For example, App Store has the restriction “apps above 100 MB will not download until you connect to Wi-Fi”. As a result, a feature that increases the binary size by 100MB will receive much more scrutiny than one that increases it by 10MB. Although having deep neural networks running on mobile has many great
 
 \section{Related Work}
 
