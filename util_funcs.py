@@ -236,16 +236,16 @@ def get_dataloader(
 
 
 
-def get_optimizer(model, learning_rate, warmup_proportion, 
+def get_optimizer(model, learning_rate, warmup_proportion,
                   num_train_optimization_steps, **kwargs):
     param_optimizer = list(model.named_parameters())
     no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
     optimizer_grouped_parameters = [
-        {'params': [p for n, p in param_optimizer 
-                    if not any(nd in n for nd in no_decay)], 
+        {'params': [p for n, p in param_optimizer
+                    if not any(nd in n for nd in no_decay)],
          'weight_decay': 0.01},
-        {'params': [p for n, p in param_optimizer 
-                    if any(nd in n for nd in no_decay)], 
+        {'params': [p for n, p in param_optimizer
+                    if any(nd in n for nd in no_decay)],
          'weight_decay': 0.0}
         ]
     optimizer = BertAdam(optimizer_grouped_parameters,
@@ -259,10 +259,11 @@ def get_data(processor, runtime_config, **kwargs):
     label_list, num_labels, tokenizer, train_examples, num_train_optimization_steps = \
     process_data(processor, **runtime_config, **kwargs)
 
-    train_dataloader = get_dataloader(train_examples, label_list, 
+    train_dataloader = get_dataloader(train_examples, label_list,
                    tokenizer, **runtime_config, **kwargs)
     return label_list, num_labels, tokenizer, train_examples, \
            num_train_optimization_steps, train_dataloader
+
 
 def get_log_name():
     import pytz
@@ -270,8 +271,8 @@ def get_log_name():
     now = datetime.now(tz=pytz.UTC)
     now_est = now.astimezone(pytz.timezone('America/New_York'))
     return now_est.strftime('%Y-%m-%d_%H_%M')
-     
-    
+
+
 def save_model(model, output_dir):
     # Save a trained model and the associated configuration
     model_to_save = model.module if hasattr(model, 'module') else model  # Only save the model it-self
