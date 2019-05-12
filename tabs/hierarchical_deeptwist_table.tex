@@ -1,0 +1,38 @@
+\newlength{\tableblocksep}
+\setlength{\tableblocksep}{1ex}
+
+\begin{table}[tbh]
+        \caption{DeepTwist Results}
+        \label{tab:deeptwistresults}
+        \centering
+        \vspace{1em}
+        \begin{tabular}{p{1ex}lcccc}
+\toprule
+& &       Val. Loss & Val. Acc. \\
+\cmidrule{3-4}
+\multicolumn{2}{l}{Diff.\ Pruning} \\
+& $p=40\%$  & $0.203$ & $90.9\%$ \\
+& $p=60\%$  & $0.209$ & $92.0\%$ \\
+& $p=80\%$  & $0.222$ & $91.6\%$ \\
+& $p=90\%$  & $0.216$ & $91.6\%$ \\
+& $p=95\%$  & $0.221$ & $91.6\%$ \\
+& $p=99\%$  & $0.222$ & $91.3\%$ \\
+& $p=100\%$ & $0.692$ & $52.2\%$ \\[\tableblocksep]
+\multicolumn{2}{l}{Diff.\ Pruning (global)} \\
+& $p=90\%$  & $0.213$ & $91.6\%$ \\
+& $p=99\%$  & $0.222$ & $90.5\%$ \\
+& $p=100\%$ & $0.738$ & $50.9\%$ \\[\tableblocksep]
+\multicolumn{2}{l}{Pruning} \\
+& $p=20\%$  & $0.291$ & $88.6\%$ \\
+& $p=60\%$  & $0.425$ & $81.5\%$ \\
+& $p=40\%$  & $0.424$ & $84.5\%$ \\
+& $p=80\%$  & $0.532$ & $76.7\%$ \\[\tableblocksep]
+\multicolumn{2}{l}{SVD} \\
+& $r=200$   & $0.459$ & $84.5\%$ \\
+& $r=150$   & $0.456$ & $82.8\%$ \\
+& $r=100$   & $0.515$ & $82.3\%$ \\
+& $r=50$    & $0.490$ & $81.0\%$ \\[\tableblocksep]
+\bottomrule
+\end{tabular}
+
+        \end{table}
