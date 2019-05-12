@@ -1,4 +1,4 @@
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 
 \usepackage{times}
 \usepackage{graphicx}
@@ -55,12 +55,34 @@
 \section{Introduction}
 \label{sec:introduction}
 
-Example Structure:
-\begin{itemize}
-\item What is the problem of interest and what (high-level) are the current best methods for solving it?
-\item How do you plan to improve/understand/modify this or related methods?
-\item Preview your research process, list the contributions you made, and summarize your experimental findings.
-\end{itemize}
+% Example Structure:
+% \begin{itemize}
+% \item What is the problem of interest and what (high-level) are the current best methods for solving it?
+% \item How do you plan to improve/understand/modify this or related methods?
+% \item Preview your research process, list the contributions you made, and summarize your experimental findings.
+% \end{itemize}
+
+Deep Neurel Networks (DDNs) have evolved to the state-of-art for many tasks in
+language modeling. In the meantime, they have become increasingly large in
+size, due to both pre-trained embeddings and deeper networks. However, in
+order to deploy the models on more resource-conscious devices efficiently,
+such as mobile devices or even older personal laptops, as opposed to on cloud
+virtual machines, it is crucial to reduce the size of the models.
+
+Previous work has had a lot of success in computer vision tasks.
+\citet{han2015deep} was able to reduce the size of AlexNet by 35$\times$ and
+the size of VGG-16 by 49$\times$ without loss of accuracy. Recently, similar
+compression techniques were applied by \citet{cheong2014transformer} on
+Transformers and reduced the size by a factor of 5.85 while retaining 98.43\%
+of the performance. To the best of our knowledge, compressing language models
+remains an under-studied field.
+
+In this paper, we proved that DeepTwist framework works well on compressing
+language models with pruning. {\color{red} TODO: prune99 result}.
+
+proposed weight-sharing method Difference Pruning
+
+attempt kd but does not work well
 
 
 \section{Background}
@@ -72,15 +94,24 @@ Example Structure:
 % \item What are the challenges/opportunities inherent to the data? (High dimensional, sparse, missing data, noise, structure, discrete/continuous, etc?)
 % \end{itemize}
 
-Deep Neurel Networks (DNNs) have become extremely large in size with growing
-complexities. A BERT base model has 110M parameters and takes 438 MB disk space
-to store. This makes it very hard to deploy those models on mobile devices,
-which in most cases have limited storage and RAM and lower computational
-resources. As a result, we are not able to store multiple models for different
-tasks on mobile devices, and evaluating one single model also takes too much
-time due to computational capacity limit. The challenge that we are facing is
-how to compress DNNs in size while keeping their predictive performance
-competitive with full model. 
+DNNs have become extremely large in size with growing complexities. A BERT
+base model has 110M parameters and takes 438 MB disk space to store. This
+makes it very hard to deploy those models on mobile devices, which in most
+cases have limited storage and RAM and low computational resources. As a
+result, we are not able to store multiple models for different tasks on mobile
+devices. Allocating hundreds of megabytes to to those models is also not
+realistic for mobile apps such as Gmail or Facebook. And due to increasing
+privacy concerns, users prefer models generating predictions based on their
+input to be running locally instead of sending information to the cloud. Last
+but not least, evaluating enormous models takes too much time on mobile
+devices and can drain batteries significantly.
+
+The challenge that we are facing is therefore how to compress DNNs in size
+while keeping their predictive performance competitive with full model.
+
+% Though these neural networks are very powerful, the
+% large number of weights consumes considerable storage and memory bandwidth. For example, the AlexNet Caffemodel is over 200MB, and the VGG-16 Caffemodel is over 500MB (BVLC). This makes it difficult to deploy deep neural networks on mobile system.
+% First, for many mobile-first companies such as Baidu and Facebook, various apps are updated via different app stores, and they are very sensitive to the size of the binary files. For example, App Store has the restriction “apps above 100 MB will not download until you connect to Wi-Fi”. As a result, a feature that increases the binary size by 100MB will receive much more scrutiny than one that increases it by 10MB. Although having deep neural networks running on mobile has many great
 
 \section{Related Work}
 
@@ -93,9 +124,9 @@ competitive with full model.
 % \end{itemize}
 
 We are interested in compressing the language representation model BERT
-\citep{devlin2018bert}.  It is the state-of-art result in many natural language
-processing tasks  such as natural language inference, paraphrasing and named
-entity recognition.
+\citep{devlin2018bert}.  It is the state-of-art result in many natural
+language processing tasks  such as natural language inference, paraphrasing
+and named entity recognition.
 
 \citet{cheng2017survey} provides a comprehensive overview of the state-of-art
 methods to compress DNNs. Of the methods summarized by the paper, the ones
@@ -107,13 +138,14 @@ Knowledge distillation, first proposed by \citep{bucilua2006model} as
 since it compresses an existing model by replacing it with a simpler model
 that is trained on its outputs.
 
-DeepTwist, a end-to-end training framework, allows us to incorporate compression
-procedures into training \citep{lee2018deeptwist}. Under this framework, the
-model parameters are occasionally distorted during training time instead of only
-at the end. This framework has the benefit of simplified training procedure and
-faster convergence and reduced requirement for hyperparameter tuning. Experiment
-on MNIST dataset with DeepTwist shows that LeNet-5 and LeNet-300-100 models are
-able to retain predictive accuracy under high compression rate.
+DeepTwist, a end-to-end training framework, allows us to incorporate
+compression procedures into training \citep{lee2018deeptwist}. Under this
+framework, the model parameters are occasionally distorted during training
+time instead of only at the end. This framework has the benefit of simplified
+training procedure and faster convergence and reduced requirement for
+hyperparameter tuning. Experiment on MNIST dataset with DeepTwist shows that
+LeNet-5 and LeNet-300-100 models are able to retain predictive accuracy under
+high compression rate.
 
 
 \section{Inference (or Training)}
@@ -435,14 +467,64 @@ BERT.
 % \end{table*}
 
 
-% \begin{table}
-%   \centering
-%   \missingfigure[figheight=5cm]{}
-%   \caption{Secondary table or figure in results section.}
-%   \label{fig:mainres}
-% \end{table}
+\begin{table}[tbh]
+        \caption{Results for DeepTwist}
+        \label{tab:deeptwist_results}
+        \centering
+        \vspace{1em}
+        \begin{tabular}{lccccc}
+\toprule
+{} &               type &  param &  val loss &   val acc \\
+{} & 
+\hypertarget{tabcol:1}{(1)} & \hypertarget{tabcol:2}{(2)} & \hypertarget{tabcol:3}{(3)} & \hypertarget{tabcol:4}{(4)} \\ \midrule
+0  &  diff prune global &   $90$ &   $0.211$ &   $0.912$ \\
+1  &              prune &   $20$ &   $0.291$ &   $0.886$ \\
+2  &              prune &   $80$ &   $0.532$ &   $0.767$ \\
+3  &         diff prune &   $80$ &   $0.222$ &   $0.916$ \\
+4  &  diff prune global &   $99$ &       --- &       --- \\
+5  &  diff prune global &   $90$ &   $0.213$ &   $0.916$ \\
+6  &         diff prune &   $40$ &   $0.203$ &   $0.909$ \\
+7  &                svd &   $50$ &   $0.490$ &   $0.810$ \\
+8  &                svd &  $200$ &   $0.459$ &   $0.845$ \\
+9  &              prune &   $40$ &   $0.424$ &   $0.845$ \\
+10 &              prune &   $60$ &   $0.425$ &   $0.815$ \\
+11 &  diff prune global &   $99$ &   $0.230$ &   $0.901$ \\
+12 &  diff prune global &   $99$ &   $0.222$ &   $0.905$ \\
+13 &         diff prune &   $99$ &   $0.222$ &   $0.913$ \\
+14 &         diff prune &   $95$ &   $0.221$ &   $0.916$ \\
+15 &         diff prune &   $90$ &   $0.216$ &   $0.916$ \\
+16 &         diff prune &   $60$ &   $0.209$ &   $0.920$ \\
+17 &                svd &  $100$ &   $0.515$ &   $0.823$ \\
+18 &                svd &  $150$ &   $0.456$ &   $0.828$ \\
+19 &         diff prune &   $80$ &   $2.533$ &   $0.491$ \\
+20 &         diff prune &   $90$ &       --- &       --- \\
+21 &  diff prune global &    $0$ &   $0.738$ &   $0.509$ \\
+22 &         diff prune &    $0$ &   $0.692$ &   $0.522$ \\
+23 &         diff prune &    $0$ &   $1.854$ &   $0.491$ \\
+\bottomrule
+\end{tabular}
 
+\end{table}
 
+\begin{table}[tbh]
+        \caption{Results for Knowledge Distillation}
+        \label{tab:kd_results}
+        \centering
+        \vspace{1em}
+        \begin{tabular}{lccccccc}
+\toprule
+{} &  framework &  type &  val loss &  ß val acc \\
+{} & \hypertarget{tabcol:1}{(1)} & \hypertarget{tabcol:2}{(2)} & \hypertarget{tabcol:3}{(3)} & \hypertarget{tabcol:4}{(4)} \\
+\midrule
+0 &        nokd &   CNN &   $0.906$ &   $0.799$ \\
+1 &        nokd &   CNN &   $0.448$ &   $0.784$ \\
+2 &        nokd &   CNN &   $0.856$ &   $0.812$ \\
+3 &          kd &  LSTM &   $0.738$ &   $0.831$ \\
+4 &          kd &   CNN &   $0.423$ &   $0.834$ \\
+\bottomrule
+\end{tabular}
+
+\end{table}
 
 \section{Discussion}
 
