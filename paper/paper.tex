@@ -44,7 +44,7 @@
 \begin{abstract}
 \raggedright
   \begin{itemize}
-  \item We apply model compression results to fine-tuned BERT on multiclass
+  \item We apply model compression techniques to fine-tuned BERT on multiclass
   classification problems.
   \item Knowledge distillation and DeepTwist-based compression techniques give
   us moderate compression benefits for a commensurate decrease in model
@@ -567,25 +567,27 @@ was significant?
 
 \input{../tabs/hierarchical_deeptwist_table.tex}
 
-\begin{table}[tbh]
-        \caption{Results for Knowledge Distillation}
-        \label{tab:kd_results}
-        \centering
-        \vspace{1em}
-        \begin{tabular}{lccccccc}
-\toprule
-{} &  framework &  type &  val loss &  ß val acc \\
-{} & \hypertarget{tabcol:1}{(1)} & \hypertarget{tabcol:2}{(2)} & \hypertarget{tabcol:3}{(3)} & \hypertarget{tabcol:4}{(4)} \\
-\midrule
-0 &        nokd &   CNN &   $0.906$ &   $0.799$ \\
-1 &        nokd &   CNN &   $0.448$ &   $0.784$ \\
-2 &        nokd &   CNN &   $0.856$ &   $0.812$ \\
-3 &          kd &  LSTM &   $0.738$ &   $0.831$ \\
-4 &          kd &   CNN &   $0.423$ &   $0.834$ \\
-\bottomrule
-\end{tabular}
-\label{tbl:kdresults}
-\end{table}
+\input{../tabs/kd_table.tex}
+
+% \begin{table}[tbh]
+%         \caption{Results for Knowledge Distillation}
+%         \label{tab:kd_results}
+%         \centering
+%         \vspace{1em}
+%         \begin{tabular}{lccccccc}
+% \toprule
+% {} &  framework &  type &  val loss &  ß val acc \\
+% {} & \hypertarget{tabcol:1}{(1)} & \hypertarget{tabcol:2}{(2)} & \hypertarget{tabcol:3}{(3)} & \hypertarget{tabcol:4}{(4)} \\
+% \midrule
+% 0 &        nokd &   CNN &   $0.906$ &   $0.799$ \\
+% 1 &        nokd &   CNN &   $0.448$ &   $0.784$ \\
+% 2 &        nokd &   CNN &   $0.856$ &   $0.812$ \\
+% 3 &          kd &  LSTM &   $0.738$ &   $0.831$ \\
+% 4 &          kd &   CNN &   $0.423$ &   $0.834$ \\
+% \bottomrule
+% \end{tabular}
+% \label{tbl:kdresults}
+% \end{table}
 
 \section{Discussion}
 
@@ -602,8 +604,14 @@ at high prune rates. Pruning with a global threshold rather than in a
 stratified way produces distinctly worse results. We suspect this is due to
 weights in different layers having different magnitudes, making a global
 threshold have an undue effect on layers whose weights tend to be smaller. We
-confirm this heterogeneity in 
-% TODO: include box-plots of weights
+confirm this heterogeneity in \cref{fig:weightsbylayer}.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=.5\textwidth]{../figs/value_by_layer.pdf}
+\caption{Weight distributions for five most/least variable layers}
+\label{fig:weightsbylayer}
+\end{figure}
 
 Our non-difference distortions are more sensitive to the compression parameter
 (whether prune rate or SVD rank). We find it difficult to achieve performance
@@ -630,7 +638,7 @@ simplicity, and see no evidence that SVD achieves better compression.
 % \end{itemize}
 
 When compared to the performance of a fine-tuned BERT on SST-2, our Knowledge
-Distillation results---displayed in \cref{tbl:kdresults}---fall short. However,
+Distillation results---displayed in \cref{tab:kd_results}---fall short. However,
 it is important to note the student networks are also much smaller than BERT. To
 isolate the effect of KD, we compare the performance of
 \citet{kim2014convolutional}'s CNN trained on the correct labels versus the BERT
@@ -642,11 +650,18 @@ We also identify some curious behavior in the KD training curves. When training
 the LSTM on the BERT outputs, neither training loss nor validation loss decrease
 at first. In fact, they stay approximately constant for a couple of epochs. Only
 after this prolonged period does loss abruptly start going down, producing a
-normal curve from that point forward. We find this remarkably puzzling. We
-hypothesize this may be the effect of our adaptive learning rate starting out
-too low and taking multiple epochs to grow to a point where it can meaningfully
-update parameters. 
-% TODO: include this graph -- screenshot from tensorboard?
+normal curve from that point forward. We find this---depicted in
+\cref{fig:kdlstmloss}---remarkably puzzling. We hypothesize this may be the
+effect of our adaptive learning rate starting out too low and taking multiple
+epochs to grow to a point where it can meaningfully update parameters. 
+
+\begin{figure*}[tb]
+\centering
+\includegraphics[width=\textwidth]{../figs/kd_lstm_training.png}
+\caption{Training loss (left), val. loss (middle), and val. accuracy
+(right) for LSTM KD}
+\label{fig:kdlstmloss}
+\end{figure*}
 
 % \begin{itemize}
 % \item What conclusions can you draw from the results section?

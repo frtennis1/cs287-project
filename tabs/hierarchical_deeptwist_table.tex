@@ -10,6 +10,9 @@
 \toprule
 & &       Val. Loss & Val. Acc. \\
 \cmidrule{3-4}
+\multicolumn{2}{l}{\hspace{-.8em} \bf SST-2} \\[0.5\tableblocksep]
+\midrule
+\multicolumn{2}{l}{Uncompressed BERT} & $0.266$ & $92.9\%$ \\[\tableblocksep]
 \multicolumn{2}{l}{Diff.\ Pruning} \\
 & $p=40\%$  & $0.203$ & $90.9\%$ \\
 & $p=60\%$  & $0.209$ & $92.0\%$ \\
@@ -27,12 +30,18 @@
 & $p=60\%$  & $0.425$ & $81.5\%$ \\
 & $p=40\%$  & $0.424$ & $84.5\%$ \\
 & $p=80\%$  & $0.532$ & $76.7\%$ \\[\tableblocksep]
-\multicolumn{2}{l}{SVD} \\
+\multicolumn{2}{l}{Rank Reduction} \\
 & $r=200$   & $0.459$ & $84.5\%$ \\
 & $r=150$   & $0.456$ & $82.8\%$ \\
 & $r=100$   & $0.515$ & $82.3\%$ \\
-& $r=50$    & $0.490$ & $81.0\%$ \\[\tableblocksep]
+& $r=50$    & $0.490$ & $81.0\%$ \\[2\tableblocksep]
+\multicolumn{2}{l}{\hspace{-.8em} \bf QQP} \\[0.5\tableblocksep]
+\midrule
+\multicolumn{2}{l}{Diff Pruning} \\
+& $p=0\%$ & $0.237$ & $90.1\%$ \\
+& $p=80\%$ & $0.239$ & $90.0\%$ \\
+& $p=99\%$ & $0.287$ & $87.4\%$  \\
 \bottomrule
 \end{tabular}
 
-        \end{table}
+\end{table}
