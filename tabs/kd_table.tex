@@ -1,0 +1,19 @@
+\begin{table}[tbh]
+        \caption{Knowledge Distillation SST-2 Results}
+        \label{tab:kd_results}
+        \centering
+        \vspace{1em}
+        \begin{tabular}{p{.1em}lcccc}
+\toprule
+& & \multicolumn{2}{c}{No KD} & \multicolumn{2}{c}{KD} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+& & Val. Loss & Val. Acc & Val. Loss & Val. Acc \\
+\cmidrule{3-6}
+\multicolumn{2}{l}{LSTM} & $0.513$ & $80.5\%$ & $0.738$ & $83.1\%$ \\[\tableblocksep]
+\multicolumn{2}{l}{CNN}  \\
+& $d=0$ & $0.426$ & $81.2\%$ & $0.423$ & $83.4\%$ \\
+& $d=0.5$ & $0.418$ & $82.8\%$ & $z$ & $a$ \\
+\bottomrule
+\end{tabular}
+
+\end{table}
