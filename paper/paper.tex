@@ -567,25 +567,45 @@ was significant?
 
 \section{Discussion}
 
+Our most striking result is the robust performance of difference pruning. Even
+keeping upwards of 99\% of the weights unchanged gives us performance that is
+very competitive with the unrestricted model. Most of our experiments are on
+SST-2, but we see success with this method on QQP as well, suggesting that
+small changes to pre-trained BERT are sufficient for performance on a specific
+task. 
 
+As expected, pruning a higher proportion of the weights decreases performance,
+but we are happily surprised at the relatively low magnitude of this effect even
+at high prune rates. Pruning with a global threshold rather than in a
+stratified way produces distinctly worse results. We suspect this is due to
+weights in different layers having different magnitudes, making a global
+threshold have an undue effect on layers whose weights tend to be smaller. We
+confirm this heterogeneity in 
+% TODO: include box-plots of weights
 
-Things to say about DeepTwist
-\begin{itemize}
-  \item Stratified prune better
-  \item Prune rate mad robust
-  \item Diff gud
-  \item ``Improved performance''
-  \item QQP takes long, but looks okay
-  \item Didn't try only pruning the $\bert$ part
-\end{itemize}
+Our non-difference distortions are more sensitive to the compression parameter
+(whether prune rate or SVD rank). We find it difficult to achieve performance
+comparable to the uncompressed BERT with a significantly compressed model. Among
+the different distortion methods, we favor pruning for its computational
+simplicity, and see no evidence that SVD achieves better compression.
 
-Things to say about KD
-\begin{itemize}
-  \item it bad
-  \item doesn't work
-  \item LSTM weird/CNN incredibly noisy
-  \item \TODO{compare}
-\end{itemize}
+% Things to say about DeepTwist
+% \begin{itemize}
+%   \item Stratified prune better
+%   \item Prune rate mad robust
+%   \item Diff gud
+%   \item ``Improved performance''
+%   \item QQP takes long, but looks okay
+%   \item Didn't try only pruning the $\bert$ part
+% \end{itemize}
+% 
+% Things to say about KD
+% \begin{itemize}
+%   \item it bad
+%   \item doesn't work
+%   \item LSTM weird/CNN incredibly noisy
+%   \item \TODO{compare}
+% \end{itemize}
 
 When compared to the performance of a fine-tuned BERT on SST-2, our Knowledge
 Distillation results---displayed in \cref{tbl:kdresults}---fall short. However,
@@ -606,14 +626,14 @@ too low and taking multiple epochs to grow to a point where it can meaningfully
 update parameters. 
 % TODO: include this graph -- screenshot from tensorboard?
 
-\begin{itemize}
-\item What conclusions can you draw from the results section?
-\item Is there further analysis you can do into the results of the system? Here
-is a good place to include visualizations, graphs, qualitative analysis of your
-results.
-
-\item  What questions remain open? What did you think might work, but did not?
-\end{itemize}
+% \begin{itemize}
+% \item What conclusions can you draw from the results section?
+% \item Is there further analysis you can do into the results of the system? Here
+% is a good place to include visualizations, graphs, qualitative analysis of your
+% results.
+% 
+% \item  What questions remain open? What did you think might work, but did not?
+% \end{itemize}
 
 
 
