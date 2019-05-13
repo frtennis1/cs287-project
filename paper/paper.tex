@@ -733,16 +733,48 @@ epochs to grow to a point where it can meaningfully update parameters.
 
 \section{Conclusion}
 
-% TODO: talk about bringing in outside data for KD
+Knowledge Distillation displayed promise by improving student networks'
+performance versus training only on the classes $y_i$. However, the student
+networks fell short of replicating uncompressed BERT's performance. It is
+possible that future variations on our work could achieve competitive
+compression. In particular, we restrict our knowledge distillation only to the
+samples in the original training set. However, there is no need to perform
+training so narrowly since the teacher network can annotate any unsupervised
+data. It is likely that doing so would further increase performance, though we
+can only speculate as to the magnitude of the benefit.
 
-\begin{itemize}
-\item What happened?
-\item What next?
-\end{itemize}
+It is also possible that our choice of student network colored our results. We
+aimed for architectures known to work on SST-2 while being much smaller, such as
+\citet{kim2014convolutional}'s CNN. It is possible that we aimed too small and
+would be better served by a more complex model---possibly even a smaller version
+of BERT. Finally, in all our experiments our teacher network is a single
+fine-tuned version of BERT. Since teacher network complexity doesn't contribute
+to the complexity of the final model, we could instead use an ensemble of BERTs
+(or even other models) as our teacher network.
 
+The DeepTwist framework---particularly when combined with difference
+pruning---exceeded our expectations for compression. It would be interesting to
+test whether this generalizes to a wider array of tasks, particularly since we
+only reap compression benefits as we leverage weight sharing over a number of
+tasks. Furthermore, from the distortions presented in \citet{lee2018deeptwist},
+we did not implement clustering-based quantization because of the significant
+computational bottleneck clustering with $k$-means on all of BERT's parameters
+posed. Future work could attempt to surmount this obstacle whether through
+increased computational resources or a more scalable clustering algorithm.
 
+Finally, we recognize our approaches are but a subset of the ways to go about
+compressing large language models such as BERT. Two alternatives stand out as
+particularly exciting possible future directions. \citet{liu2019multi} propose a
+method for complete weight sharing of BERT's encoder parameters across different
+tasks by simultaneously training for all tasks. We believe this approach could
+be relaxed through difference pruning to achieve a performance gain relative to
+each compression technique in isolation. 
 
-% \section*{Acknowledgements}
+% TODO: reverse of deeptwist -- what paper was this?
+
+\section*{Acknowledgements}
+
+% TODO: thank Rush + 287
 
 % \textbf{Do not} include acknowledgements in the initial version of
 % the paper submitted for blind review.
