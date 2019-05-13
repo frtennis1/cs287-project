@@ -166,9 +166,9 @@ effective rank.
 Pruning, quantization, and rank reduction are operations applied to a
 particular network's weights without altering the network architecture. 
 A different framework, knowledge distillation, first proposed by 
-\citep{bucilua2006model} as
+\citet{bucilua2006model} as
 ``knowledge transfer,'' was recently popularized by
-\citep{hinton2015distilling}. In knowledge distillation, a simple network,
+\citet{hinton2015distilling}. In knowledge distillation, a simple network,
 called the \emph{student network}, is not trained on the actual data but on
 the output of the large network one wishes to compress, called the 
 \emph{teacher network}. This procedure can even be extended by inserting
@@ -237,7 +237,7 @@ where usually the loss function is taken to be cross-entropy loss. When we
 already have a model $f$ that performs well, we can leverage this training
 paradigm through a modification called \emph{knowledge distillation}. Given
 the large model that performs well, termed the \emph{teacher network}, we
-train a smaller network $g$, the \emph{student network}, by minimizing,
+train a smaller network $g$, the \emph{student network}, by minimizing
 \[ \ell(g(\bm{x_i}), f(\bm{x_i})).\]
 We can take
 $\ell$ to be either mean-square error (MSE) between the probabilities in
@@ -321,8 +321,9 @@ We have significant flexibility in picking a distortion function, but in order
 to be useful, it must provide compression benefits. That is, the image of the
 distortion function should have a parameterization that takes less space in
 memory than then range of all possible $\btheta$s. For example, if $\btheta \in
-\mathbb{R}^{m,n}$, and the distortion produces a matrix of rank 1, then any
-distorted matrix could be uniquely identified by $\btheta' \in \mathbb{R}^{n+m}$
+\mathbb{R}^{m \times n}$, and the distortion produces a matrix of rank 1, then
+any
+distorted matrix could be uniquely identified by $\btheta' \in \mathbb{R}^{m+n}$
 through a matrix factorization.
 
 It is important to note that while $\btheta$ will be compressible immediately
@@ -538,7 +539,7 @@ confirm this heterogeneity in \cref{fig:weightsbylayer}.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=.5\textwidth]{../figs/value_by_layer.pdf}
+\includegraphics[width=.48\textwidth]{../figs/value_by_layer.pdf}
 \caption{Weight distributions for five most/least variable layers}
 \label{fig:weightsbylayer}
 \end{figure}
@@ -562,7 +563,7 @@ matrices in BERT are in fact effectively dense, unlike CNNs, where
 good compression relies on the effective sparsity of the matrices. 
 \begin{figure}[tb]
     \centering
-    \includegraphics[width=0.5\textwidth]
+    \includegraphics[width=0.46\textwidth]
     {../figs/svd-singular-vals-distribution.png}
     \caption{Distribution of singular values in one of BERT layers}
     \label{fig:singular-values}
@@ -582,7 +583,7 @@ the LSTM on the BERT outputs, neither training loss nor validation loss decrease
 at first. In fact, they stay approximately constant for a couple of epochs. Only
 after this prolonged period does loss abruptly start going down, producing a
 normal curve from that point forward. We find this---depicted in
-\cref{fig:kdlstmloss}---remarkably puzzling. We hypothesize this may be the
+\cref{fig:kdlstmloss}---remarkably puzzling. We speculate this may be the
 effect of our adaptive learning rate starting out too low and taking multiple
 epochs to grow to a point where it can meaningfully update parameters. 
 
