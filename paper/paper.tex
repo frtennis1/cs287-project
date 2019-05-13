@@ -73,9 +73,9 @@
 % \item Preview your research process, list the contributions you made, and summarize your experimental findings.
 % \end{itemize}
 
-Deep Neural Networks (DDNs) have become the state-of-art for many tasks in
+Deep Neural Networks (DNNs) have become the state-of-art for many tasks in
 language modeling. At the same time, they have become progressively larger in
-size, due to both larger out-of-box pre-trained embeddings and deeper
+size, due to both larger out-of-box pretrained embeddings and deeper
 networks. However, in order to deploy the models on more resource-constrained
 devices, such as mobile devices or even older personal laptops, as opposed to
 on cloud virtual machines, it is crucial to reduce the size of the models.
@@ -103,11 +103,11 @@ whether two questions asked on Quora are semantically equivalent.
 
 The most important contribution of this paper is that we proposed a new
 weight-sharing method called ``Difference Pruning'' which imposes constraint on
-the sparcity of weight difference with the pre-trained BERT model. While
+the sparcity of weight difference with the pretrained BERT model. While
 uncompressed fine-tuned BERT model achieves 92.9\% validation accuracy on
-SST-2, the Difference Pruning model that keeps 99\% of the pre-trained BERT
+SST-2, the Difference Pruning model that keeps 99\% of the pretrained BERT
 weights achieves 91.3\% on the validation set. This enables multiple language
-modeling tasks to share the weights of pre-trained BERT and each incurs minimal
+modeling tasks to share the weights of pretrained BERT and each incurs minimal
 extra storage space requirements.
 
 \section{Background}
@@ -216,7 +216,7 @@ what the coin came up, it will in less time understand that the probability is
 always 50\%.
 
 An additional benefit from knowledge distillation arises from BERT's
-pre-training. Because BERT is pre-trained on large amounts of unstructured
+pre-training. Because BERT is pretrained on large amounts of unstructured
 data, it contains a powerful language model which likely would be impossible
 to learn from the specific task's data-set. To an extent, relevant features
 from this language model are what make BERT so powerful once it's fine-tuned.
@@ -344,7 +344,7 @@ We list a few methods of parameterizing the distortion step.
   
   Pruning is an out-of-the-box procedure that works with any models. However,
   as a price of the generality, pruning fails to be tailored to the nature of
-  BERT being a pre-trained model. Suppose the pretrained weights $\bphi_0 $
+  BERT being a pretrained model. Suppose the pretrained weights $\bphi_0 $
   capture certain structure of language, then dramatic distortions to
   $\bphi_0$ essentially discards the information, especially early in the
   training loop. We may partially remedy this issue by either using a dynamic
@@ -391,11 +391,11 @@ values in $U,V$. If we keep only the $r$ largest spectral values, then we store
 $\tilde U \tilde \Sigma$, an $n\times r$ matrix, and $\tilde V$, an $m\times r$
 matrix. Thus, instead of storing $2nm$ floats, we may store $r(n+m)$, achieving
 a compression rate of \[
-\rho = \frac{r(n+m)}{2mn}.
+\rho = 1-\frac{r(n+m)}{2mn}.
 \]
 Note however, that storing matrices in this manner requires an additional
 matrix multiplication in evaluation time, since we have to compute the product
-$\tilde U \tilde \Sigma \tilde V$.
+$\tilde U \tilde \Sigma \tilde V$. 
 
 % \subsection{Knowledge Distillation}
 
@@ -518,6 +518,26 @@ difference-pruning based. In \Cref{tab:kd_results}, we present some knowledge
 distillation experiments, with the student network being an LSTM or a CNN, with
 or without dropout \citep{kim2014convolutional}. 
 
+Pruning admits a simple upper bound for compression, which is simply the
+pruning ratio.\footnote{The exact compression rate is complicated, due to
+the sparse data structure implemented for the compressed model} Compression
+rate for difference pruning depends on the number of tasks the user
+desires to perform, since difference pruning is understood to be a form of
+weight sharing. In that context, the (upper bound) compression rate of
+difference
+pruning
+is also self-evident. The compression rate achieved by rank reduction is \[
+\rho = 1 - \frac{r(n+m)}{2mn}.
+\]
+Since most matrices in \texttt{BERT-base-uncased} is $768\times 768,$ the
+compression rate is approximately \[
+\rho \approx 1 - \frac{r}{768} = (74.0\%,
+80.5\%,
+87.0\%,
+93.5\%)
+\]
+for $r = (200,150,100,50)$, respectively.
+ 
 For the most part, difference pruning seems to be robust to the pruning
 rate. As a sanity check, we include difference pruning with 100\% pruning
 rate, which is equivalent to BERT model without fine-tuning, and obtaining
@@ -628,7 +648,7 @@ Our most striking result is the robust performance of difference pruning. Even
 keeping upwards of 99\% of the weights unchanged gives us performance that is
 very competitive with the unrestricted model. Most of our experiments are on
 SST-2, but we see success with this method on QQP as well, suggesting that
-small changes to pre-trained BERT are sufficient for performance on a specific
+small changes to pretrained BERT are sufficient for performance on a specific
 task. 
 
 As expected, pruning a higher proportion of the weights decreases performance,
