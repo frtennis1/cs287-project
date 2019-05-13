@@ -377,7 +377,8 @@ We list a few methods of parameterizing the distortion step.
   $t_p$ be the $p$-th quantile of the vector $\bvartheta$. Then \[
   \prune(\bvartheta; p) = \one(|\bvartheta| > t_p) \odot \bvartheta
   \]
-  be the vector where values in $\bvartheta$ below $t_p$ are zeroed. 
+  is the vector where values in $\bvartheta$ below in absolute magnitude $t_p$
+  are zeroed. 
   
   Pruning is an extremely simple procedure. When $p$ is large, say, $p=0.99$,
   we may take advantage of sparsity of the resulting model by saving locations
@@ -441,73 +442,6 @@ Note however, that storing matrices in this manner requires an additional
 matrix multiplication in evaluation time, since we have to compute the product
 $\tilde U \tilde \Sigma \tilde V$. 
 
-% \subsection{Knowledge Distillation}
-
-
-% Example Structure:
-
-% \begin{itemize}
-% \item What is the formal definition of your problem?
-% \item What is the precise mathematical model you are using to represent it? In
-% almost all cases this will use the probabilistic language from class, e.g.
-%   \begin{equation}
-%   z \sim {\cal N}(0, \sigma^2)\label{eq:1}
-% \end{equation}
-% But it may also be a neural network, or a non-probabilistic loss,
-% \[ h_t \gets \mathrm{RNN}(x_{t}, h_{t-1} )\]
-
-% This is also a good place to reference a diagram such as Figure~\ref{fig:diagram}.
-
-% \item What are the parameters or latent variables of this model that you plan
-% on estimating or inferring? Be explicit. How many are there? Which are you
-% assuming are given? How do these relate to the original problem description?
-% \end{itemize}
-
-
-
-% \begin{figure}
-%   \centering
-%   \missingfigure[figheight=8cm]{}
-%   \caption{\label{fig:diagram} This is a good place to include a diagram
-%   showing how your model works. Examples include a graphical model or a neural
-%   network block diagram.}
-% \end{figure}
-
-% \subsection{Knowledge Distillation}
-
-
-% Example Structure:
-
-% \begin{itemize}
-% \item What is the formal definition of your problem?
-% \item What is the precise mathematical model you are using to represent it? In
-% almost all cases this will use the probabilistic language from class, e.g.
-%   \begin{equation}
-%   z \sim {\cal N}(0, \sigma^2)\label{eq:1}
-% \end{equation}
-% But it may also be a neural network, or a non-probabilistic loss,
-% \[ h_t \gets \mathrm{RNN}(x_{t}, h_{t-1} )\]
-
-% This is also a good place to reference a diagram such as Figure~\ref{fig:diagram}.
-
-% \item What are the parameters or latent variables of this model that you plan
-% on estimating or inferring? Be explicit. How many are there? Which are you
-% assuming are given? How do these relate to the original problem description?
-% \end{itemize}
-
-
-
-% \begin{figure}
-%   \centering
-%   \missingfigure[figheight=8cm]{}
-%   \caption{\label{fig:diagram} This is a good place to include a diagram
-%   showing how your model works. Examples include a graphical model or a neural
-%   network block diagram.}
-% \end{figure}
-
-
-
-
 \section{Methods}
 In this section, we briefly discuss our experimental setup. We mostly
 work with
@@ -521,14 +455,6 @@ NC-6 and NC-12 virtual machines on Microsoft Azure. We use the basic
 early stopping in training, with patience of 1 epoch, and early stopping is
 guided by validation loss. 
 
-\subsection{DeepTwist}
-We implement the DeepTwist framework with default frequency of distortion
-every 10 batches. Additionally, we ensure that training ends on a
-distortion step, so that the model produced by training has compression
-benefits. For $\prune$ and $\diffprune$ distortions, we use a single
-pruning rate held fixed throughout training. 
-
-
 \subsection{Knowledge Distillation}
 
 For knowledge distillation experiments, we use various configurations of the
@@ -538,14 +464,19 @@ feed the embeddings through an LSTM. We then map the last hidden state of the
 LSTM through a linear layer for classification.  \paragraphdot{CNN} We use an
 implementation\footnote{\url{https://github.com/jfilter/cnn-text-classification-pytorch/blob/master/cnn_text_classification/model.py}}
 of \citet{kim2014convolutional} with kernel sizes $(3,4,5)$, hidden size
-$H=300$, no dropout, and $20$ kernels for each kernel size.\footnote{These are
-default in the implementation we used.} 
+$H=300$, no dropout and 50\% dropout, and $20$ kernels for each kernel
+size.\footnote{These are default in the implementation we used.} 
 
 For each model, we initialize the embedding layer of the model with the
 first $H$ dimensions of the corresponding embedding layer in pretrained
 BERT. 
 
-
+\subsection{DeepTwist}
+We implement the DeepTwist framework with default frequency of distortion
+every 10 batches. Additionally, we ensure that training ends on a
+distortion step, so that the model produced by training has compression
+benefits. For $\prune$ and $\diffprune$ distortions, we use a single
+pruning rate held fixed throughout training. 
 
 \section{Results}
 
@@ -554,7 +485,7 @@ pane of \Cref {tab:deeptwist_results}, we show the result of various
 DeepTwist-based compression techniques on the sentiment classification task,
 SST-2, stratifying by method and then by parameter of the method. Difference
 pruning, pruning, and rank reduction are implemented as \emph{distortion by
-layer} (see \Cref{sec:model}), where as ``difference pruning (global)''
+layer} (see \Cref{sec:model}), where as \emph{difference pruning (global)}
 indicates difference pruning, but pooling all parameter values from all layers.
 The bottom pane of \Cref{tab:deeptwist_results} shows the performance on QQP of
 some competitive-performing model setups on SST-2, which are all
@@ -684,7 +615,7 @@ results in detail.
 \centering
 \includegraphics[width=\textwidth]{../figs/kd_lstm_training.png}
 \caption{Training loss (left), val. loss (middle), and val. accuracy
-(right) for LSTM KD}
+(right) plotted against number of batches of training for LSTM KD}
 \label{fig:kdlstmloss}
 \end{figure*}
 
@@ -695,11 +626,11 @@ SST-2, but we see success with this method on QQP as well, suggesting that
 small changes to pretrained BERT are sufficient for performance on a specific
 task. 
 
-As expected, pruning a higher proportion of the weights decreases performance,
-but we are happily surprised at the relatively low magnitude of this effect even
-at high prune rates. Pruning with a global threshold rather than in a
-stratified way produces distinctly worse results. We suspect this is due to
-weights in different layers having different magnitudes, making a global
+As expected, difference pruning a higher proportion of the weights decreases
+performance, but we are happily surprised at the relatively low magnitude of
+this effect even at high prune rates. Pruning with a global threshold rather
+than in a stratified way produces distinctly worse results. We suspect this is
+due to weights in different layers having different magnitudes, making a global
 threshold have an undue effect on layers whose weights tend to be smaller. We
 confirm this heterogeneity in \cref{fig:weightsbylayer}.
 
