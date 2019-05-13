@@ -42,16 +42,12 @@
 ]
 
 \begin{abstract}
-\raggedright
-  \begin{itemize}
-  \item We apply model compression techniques to fine-tuned BERT on multiclass
-  classification problems.
-  \item Knowledge distillation and DeepTwist-based compression techniques give
+% \raggedright
+  We apply model compression techniques to fine-tuned BERT on multiclass
+  classification problems.  Knowledge distillation and DeepTwist-based compression techniques give
   us moderate compression benefits for a commensurate decrease in model
-  performance.
-  \item We achieve our most compelling results from employing the DeepTwist
-  framework to share weights across BERT models fine-tuned for different tasks.
-  \item Our work demonstrates most weights need not change in the fine-tuning
+  performance. We achieve our most compelling results from employing the DeepTwist
+  framework to share weights across BERT models fine-tuned for different tasks. Our work demonstrates most weights need not change in the fine-tuning
   process.
 %   \item This document describes the expected style, structure, and rough
 %   proportions for your final project write-up.
@@ -61,7 +57,7 @@
 %   in this format. While you can include supplementary material, it will not be
 %   factored into the grading process. It is your responsibility to convey the
 %   main contributions of the work in the length given.
-  \end{itemize}
+  % \end{itemize}
 
 
 
@@ -240,7 +236,7 @@ our teacher network and train a simpler model to emulate the predictions. For
 the student network, we use both a CNN and an LSTM, specified further in
 \cref{sec:model}.
 
-\subsection{Deep Twist}
+\subsection{DeepTwist}
 
 Knowledge distillation operates by passing knowledge from a teacher network to a
 student network. There is no requirement that these networks resemble each other
@@ -479,7 +475,7 @@ train with a maximum sequence length of 64 and batch size of 32 on the
 NC-6 and NC-12 virtual machines on Microsoft Azure. We use the basic 
 \texttt{BERT-base-uncased} model for our experimental results. We employ
 early stopping in training, with patience of 1 epoch, and early stopping is
-guided by validation error. 
+guided by validation loss. 
 
 \subsection{DeepTwist}
 We implement the DeepTwist framework with default frequency of distortion
@@ -509,13 +505,40 @@ BERT.
 
 \section{Results}
 
-\begin{itemize}
-\item What were the results comparing previous work / baseline systems / your
-systems on the main task?
-\item What were the secondary results comparing the variants of your system?
-\item This section should be fact based and relatively dry. What happened, what
-was significant?
-\end{itemize}
+We show our results in \Cref {tab:deeptwist_results,tab:kd_results}. In the top
+pane of \Cref {tab:deeptwist_results}, we show the result of various
+DeepTwist-based compression techniques on the sentiment classification task,
+SST-2, stratifying by method and then by parameter of the method. Difference
+pruning, pruning, and rank reduction are implemented as \emph{distortion by
+layer} (see \Cref{sec:model}), where as ``difference pruning (global)''
+indicates difference pruning, but pooling all parameter values from all layers.
+The bottom pane of \Cref{tab:deeptwist_results} shows the performance on QQP of
+some competitive-performing model setups on SST-2, which are all
+difference-pruning based. In \Cref{tab:kd_results}, we present some knowledge
+distillation experiments, with the student network being an LSTM or a CNN, with
+or without dropout \citep{kim2014convolutional}. 
+
+For the most part, difference pruning seems to be robust to the pruning
+rate. As a sanity check, we include difference pruning with 100\% pruning
+rate, which is equivalent to BERT model without fine-tuning, and obtaining
+essentially uniform results on the validation set. Difference pruning also
+seems to outperform both ``first-order'' DeepTwist techniques, pruning and
+rank reduction, which is unsurprising as difference pruning uses more
+parameters and uses parameters that are pretrained. Difference pruning also
+seems to extend to other tasks in GLUE, as it retains its behavior in
+SST-2 to QQP, for the most part. Knowledge distillation seems less
+promising. While knowledge distillation
+slightly improves upon the model directly trained on data, it does not
+fully replicate the performance of the teacher network. We now discuss our
+results in detail.
+
+% \begin{itemize}
+% \item What were the results comparing previous work / baseline systems / your
+% systems on the main task?
+% \item What were the secondary results comparing the variants of your system?
+% \item This section should be fact based and relatively dry. What happened,
+% what was significant?
+% \end{itemize}
 
 % \begin{table*}
 %   \centering
@@ -569,6 +592,7 @@ was significant?
 
 \input{../tabs/kd_table.tex}
 
+
 % \begin{table}[tbh]
 %         \caption{Results for Knowledge Distillation}
 %         \label{tab:kd_results}
@@ -591,6 +615,15 @@ was significant?
 
 \section{Discussion}
 
+
+\begin{figure*}[htb]
+\centering
+\includegraphics[width=\textwidth]{../figs/kd_lstm_training.png}
+\caption{Training loss (left), val. loss (middle), and val. accuracy
+(right) for LSTM KD}
+\label{fig:kdlstmloss}
+\end{figure*}
+
 Our most striking result is the robust performance of difference pruning. Even
 keeping upwards of 99\% of the weights unchanged gives us performance that is
 very competitive with the unrestricted model. Most of our experiments are on
@@ -612,6 +645,8 @@ confirm this heterogeneity in \cref{fig:weightsbylayer}.
 \caption{Weight distributions for five most/least variable layers}
 \label{fig:weightsbylayer}
 \end{figure}
+
+
 
 Our non-difference distortions are more sensitive to the compression parameter
 (whether prune rate or SVD rank). We find it difficult to achieve performance
@@ -655,13 +690,7 @@ normal curve from that point forward. We find this---depicted in
 effect of our adaptive learning rate starting out too low and taking multiple
 epochs to grow to a point where it can meaningfully update parameters. 
 
-\begin{figure*}[tb]
-\centering
-\includegraphics[width=\textwidth]{../figs/kd_lstm_training.png}
-\caption{Training loss (left), val. loss (middle), and val. accuracy
-(right) for LSTM KD}
-\label{fig:kdlstmloss}
-\end{figure*}
+
 
 % \begin{itemize}
 % \item What conclusions can you draw from the results section?
