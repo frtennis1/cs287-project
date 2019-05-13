@@ -770,7 +770,14 @@ tasks by simultaneously training for all tasks. We believe this approach could
 be relaxed through difference pruning to achieve a performance gain relative to
 each compression technique in isolation. 
 
-% TODO: reverse of deeptwist -- what paper was this?
+\citet{frankle2018lottery} articulate in their ``lottery ticket hypothesis''
+that most networks contain sparse sub-networks which can perform similarly well.
+They provide an algorithm for finding these ``lottery tickets'' whose main
+differences to DeepTwist are (1) that weights that get distorted to 0 are permanently
+masked and kept at 0, and (2) that the algorithm progressively increases the
+pruning rate. This framework could serve as a competitive alternative to
+DeepTwist, and it would be interesting to see how it performs with difference
+pruning.
 
 \section*{Acknowledgements}
 
