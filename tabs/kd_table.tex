@@ -1,19 +1,21 @@
-\begin{table}[tbh]
+\begin{table*}[!htb]
         \caption{Knowledge Distillation SST-2 Results}
         \label{tab:kd_results}
         \centering
         \vspace{1em}
         \begin{tabular}{p{.1em}lcccc}
 \toprule
-& & \multicolumn{2}{c}{No KD} & \multicolumn{2}{c}{KD} \\
+& & \multicolumn{2}{c}{No Knowledge Distillation} & \multicolumn{2}{c}{Knowledge Distillation}
+\\
 \cmidrule(lr){3-4} \cmidrule(lr){5-6}
 & & Val. Loss & Val. Acc & Val. Loss & Val. Acc \\
 \cmidrule{3-6}
-\multicolumn{2}{l}{LSTM} & $0.513$ & $80.5\%$ & $0.738$ & $83.1\%$ \\[\tableblocksep]
-\multicolumn{2}{l}{CNN}  \\
-& $d=0$ & $0.426$ & $81.2\%$ & $0.423$ & $83.4\%$ \\
-& $d=0.5$ & $0.418$ & $82.8\%$ & $z$ & $a$ \\
+\multicolumn{2}{l}{LSTM-200} & $0.513$ & $80.5\%$ & $0.738$ & $83.1\%$ \\
+[\tableblocksep]
+\multicolumn{2}{l}{CNN-300} \citep{kim2014convolutional}  \\
+& $\text{dropout}=0$ & $0.426$ & $81.2\%$ & $0.423$ & $83.4\%$ \\
+& $\text{dropout}=0.5$ & $0.418$ & $82.8\%$ & $0.439$ & $83.0\%$ \\
 \bottomrule
 \end{tabular}
 
-\end{table}
+\end{table*}

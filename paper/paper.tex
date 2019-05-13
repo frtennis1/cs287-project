@@ -42,18 +42,15 @@
 ]
 
 \begin{abstract}
-\raggedright
-  \begin{itemize}
-  \item We apply model compression techniques to fine-tuned BERT on multiclass
-  classification problems.
-  \item Knowledge distillation and DeepTwist-based compression techniques give
-  us moderate compression benefits for a commensurate decrease in model
-  performance.
-  \item We achieve our most compelling results from employing the DeepTwist
-  framework to share weights across BERT models fine-tuned for different tasks.
-  \item Our work demonstrates most weights need not change in the fine-tuning
-  process.
-%   \item This document describes the expected style, structure, and rough
+% \raggedright
+  We apply model compression techniques to fine-tuned BERT on multiclass
+  classification problems.  Knowledge distillation and DeepTwist-based
+  compression techniques give us moderate compression benefits for a
+  commensurate decrease in model performance. We achieve our most compelling
+  results from employing the DeepTwist framework to share weights across
+  BERT-based
+  models fine-tuned for different tasks. Our work demonstrates most weights need
+  not change in the fine-tuning process.%   \item This document describes the expected style, structure, and rough
 %   proportions for your final project write-up.
 %   \item While you are free to break from this structure, consider it a strong
 %   prior for our expectations of the final report.
@@ -61,7 +58,7 @@
 %   in this format. While you can include supplementary material, it will not be
 %   factored into the grading process. It is your responsibility to convey the
 %   main contributions of the work in the length given.
-  \end{itemize}
+  % \end{itemize}
 
 
 
@@ -70,16 +67,9 @@
 \section{Introduction}
 \label{sec:introduction}
 
-% Example Structure:
-% \begin{itemize}
-% \item What is the problem of interest and what (high-level) are the current best methods for solving it?
-% \item How do you plan to improve/understand/modify this or related methods?
-% \item Preview your research process, list the contributions you made, and summarize your experimental findings.
-% \end{itemize}
-
-Deep Neural Networks (DDNs) have become the state-of-art for many tasks in
+Deep Neural Networks (DNNs) have become the state-of-art for many tasks in
 language modeling. At the same time, they have become progressively larger in
-size, due to both larger out-of-box pre-trained embeddings and deeper
+size, due to both larger out-of-box pretrained embeddings and deeper
 networks. However, in order to deploy the models on more resource-constrained
 devices, such as mobile devices or even older personal laptops, as opposed to
 on cloud virtual machines, it is crucial to reduce the size of the models.
@@ -89,7 +79,8 @@ Previous work has had a lot of success in computer vision tasks.
 coding to reduce the size of AlexNet by 35$\times$ and the size of VGG-16 by
 49$\times$ without loss of accuracy. Recently, similar compression techniques
 were applied by \citet{cheong2014transformer} on language models, Transformers
-in specific, and reduced the size by a factor of 5.85 while retaining 98.43\%
+especially, and reduced the size by a factor of 5.85 while retaining
+98.43\%
 of the performance. To the best of our knowledge, compressing language models
 still remains an under-studied field.
 
@@ -97,38 +88,45 @@ In this paper, we demonstrate that the DeepTwist framework
 \citep{lee2018deeptwist} is applicable to compressing fine-tuned BERT
 \citep{devlin2018bert} on multiclass classification problems in addition to
 computer vision tasks, though the drop in performance is less negligible.
-Knowledge Distillation also achieves the compression objective with more than
-desired decrease in predictive accuracy.
+Knowledge Distillation also achieves the compression objective with more
+sacrifices in  predictive accuracy.
 
-We used two of the GLUE datasets SST-2 and QQP. We ran most of the experiments
+We use two of the GLUE datasets SST-2 and QQP. We conduct most of the
+experiments
 on SST-2, a binary sentiment classification task on single-sentence movie
-reviews. We validated the results on QQP, a binary classification task for
+reviews. We validate the results on QQP, a binary classification task for
 whether two questions asked on Quora are semantically equivalent.
 
-The most important contribution of this paper is that we proposed a new
-weight-sharing method called ``Difference Pruning'' which imposes constraint on
-the sparcity of weight difference with the pre-trained BERT model. While
-uncompressed fine-tuned BERT model achieves 92.9\% validation accuracy on
-SST-2, the Difference Pruning model that keeps 99\% of the pre-trained BERT
-weights achieves 91.3\% on the validation set. This enables multiple language
-modeling tasks to share the weights of pre-trained BERT and each incurs minimal
-extra storage space requirements.
+Our most important contribution is a new weight-sharing method called
+\emph{difference pruning}, which imposes constraint on the sparsity of weight
+difference with the pretrained BERT model. While uncompressed fine-tuned BERT
+model achieves 92.9\% validation accuracy on SST-2, the difference pruning model
+that keeps 99\% of the pretrained BERT weights achieves 91.3\% on the validation
+set, which is on par with the fully fine-tuned model. This enables multiple
+language modeling tasks to share the weights of pretrained BERT, each incurring
+minimal extra storage space requirements.\footnote{Code available at \url{https://github.com/frtennis1/cs287-project}}
 
 \section{Background}
 
-% Example Structure:
-% \begin{itemize}
-% \item What information does a non-expert need to know about the problem domain?
-% \item What data exists for this problem?
-% \item What are the challenges/opportunities inherent to the data? (High
-% dimensional, sparse, missing data, noise, structure, discrete/continuous,
-% etc?)
-% \end{itemize}
+DNNs have become extremely large in size with growing complexities. A good
+example is BERT \citep{devlin2018bert}, which epitomizes a growing
+literature in natural language processing in favor of pretraining 
+\citep{peters2018deep,radford2018improving,radford2019language},
+using large models to learn from a large corpus of text in an unsupervised
+manner. The goal of such pretraining is creating contextualized
+representation of text in $\R^n$ which preserve certain structure of
+language. For different tasks, the researcher then \emph{fine-tunes} the
+pretrained model to the task, which may reach good performance since the
+pretrained representations are well-behaved representations of language
+strucutre. A downside of this framework is that each fine-tuned task
+requires a unique set of weights, which, when coupled with the raw size of
+these models, are cumbersome objects especially in a low hardware resource
+environment.
 
-DNNs have become extremely large in size with growing complexities. A BERT
-base model has 110M parameters and takes 438 MB disk space to store. This
-makes it very hard to deploy those models on mobile devices, which in most
-cases have limited storage and RAM and low computational resources. As a
+The smaller \texttt{BERT-base-uncased} model has 110M parameters and takes
+438 MB of disk space to store. This
+makes it very hard to deploy these models on mobile devices, which in most
+cases have limited storage, RAM, and computational resources. As a
 result, we are not able to store multiple models for different tasks on mobile
 devices. Allocating hundreds of megabytes to to those models is also not
 realistic for mobile apps such as Gmail or Facebook. And due to increasing
@@ -137,43 +135,89 @@ input to be running locally instead of sending information to the cloud. Last
 but not least, evaluating enormous models takes too much time on mobile
 devices and can drain batteries significantly.
 
-The challenge that we are facing is therefore how to compress DNNs in size
-while keeping their predictive performance competitive with full model.
+We are interested in compressing the language representation model BERT.  It is the state-of-art result in many natural
+language processing tasks  such as natural language inference, paraphrasing
+and named entity recognition.
 
 
 \section{Related Work}
 
-% Example Structure:
-% \begin{itemize}
-% \item What 3-5 papers have been published in this space?
-% \item How do these  differ from your approach?
-% \item What data or methodologies do each of these works use?
-% \item How do you plan to compare to these methods?
-% \end{itemize}
+There is a rich literature on compressing deep learning models, a selection
+of which we review in this section. For a comprehensive review, see  
+\citep{cheng2017survey}. The early work in compression is usually in a
+multi-stage framework, where model is trained, compressed, and then
+the compressed model is retrained for good performance. 
 
-We are interested in compressing the language representation model BERT
-\citep{devlin2018bert}.  It is the state-of-art result in many natural
-language processing tasks  such as natural language inference, paraphrasing
-and named entity recognition.
+\citet{han2015deep} applies compression techniques to computer vision, where
+convolutional neural networks are popular and are often overparameterized
+\citep{yang2019fsnet}, where the network is gradually \emph{pruned} and
+retrained in the first stage, by setting small weights to zero and severing
+gradient connections. In the second stage, the weights that survived pruning are
+clustered, and each cluster behaves like a single weight, with identical
+gradients. In the last stage, the model is Huffman encoded. Numerical
+experiments by \citet{han2015deep} show that the compression does not seem to
+influence performance. Moreover, the benefits of various compression techniques
+appear to stack without much loss in compression benefit. Additionally,
+convolutional network sizes are dominated by the convolution operations in lower
+layers \citep{denton2014exploiting}. \citet{denton2014exploiting} uses matrix
+factorization techniques on the matrices in convolutional layers, which has low
+effective rank.
 
-\citet{cheng2017survey} provides a comprehensive overview of the state-of-art
-methods to compress DNNs. Of the methods summarized by the paper, the ones
-that are of interest to our work are weight-pruning and quantization
-\citep{han2015deep}, and low-rank factorization \citep{denton2014exploiting}.
-Knowledge distillation, first proposed by \citep{bucilua2006model} as
-``knowledge transfer'', was recently popularized by
-\citep{hinton2015distilling}. It differs from the previously mentioned methods
-since it compresses an existing model by replacing it with a simpler model
-that is trained on its outputs.
+Pruning, quantization, and rank reduction are operations applied to a
+particular network's weights without altering the network architecture. 
+A different framework, knowledge distillation, first proposed by 
+\citep{bucilua2006model} as
+``knowledge transfer,'' was recently popularized by
+\citep{hinton2015distilling}. In knowledge distillation, a simple network,
+called the \emph{student network}, is not trained on the actual data but on
+the output of the large network one wishes to compress, called the 
+\emph{teacher network}. This procedure can even be extended by inserting
+various
+intermediate-sized networks between the teacher and student, intuitively
+termed
+\emph{teacher-assistant networks} \citep{mirzadeh2019improved}. We dicuss
+knowledge distillation in detail in \Cref{sec:training}.
 
-DeepTwist, a end-to-end training framework, allows us to incorporate
-compression procedures into training \citep{lee2018deeptwist}. Under this
+
+Compression techniques like pruning, quantization, and rank reduction can
+also be incorporated into an end-to-end framework, known as 
+\emph{DeepTwist}  \citep{lee2018deeptwist}, where training needs not be
+interrupted in some multi-stage process. Under this
 framework, the model parameters are occasionally distorted during training
 time instead of only at the end. This framework has the benefit of simplified
 training procedure and faster convergence and reduced requirement for
 hyperparameter tuning. Experiment on MNIST dataset with DeepTwist shows that
 LeNet-5 and LeNet-300-100 models are able to retain predictive accuracy under
 high compression rate.
+
+
+
+\section{Model}
+\label{sec:model}
+
+We first set up some notation. Let $F_\btheta = G_\bpsi \circ \bert_\bphi$ be
+a fine-tuned model where $\btheta = (\bphi, \bpsi)$ are parameters of the
+subparts of the model. $\bert_\bphi$ is a BERT model where the pretrained
+weights are $\bphi_0 = (\bphi_0^i)_{i=1}^n$, and $G_\bpsi$ is additional
+layers for fine-tuning BERT, parameterized by $\bpsi$. We decompose the
+subparts of the model into layers: \begin{align*}
+\bert_\bphi &= f_{n}^{\bphi_n} \circ \cdots \circ f_1^{\bphi_1} \\
+G_\bpsi &= g_{m}^{\bpsi_m} \circ \cdots \circ g_1^{\bpsi_1}.
+\end{align*}
+
+% \subsection{DeepTwist-based Weight Distortions}
+
+
+Given training data $(\bm x_i, y_i)_{i=1}^N$, where $\bm x_i$ are one-hot
+encoded tokens, we train by solving the standard maximum likelihood problem
+where the objective is \[
+\min_{\btheta} \sum_{i=1}^N \ell\pr{F_\btheta(\bm x_i), y_i}
+\]
+for some loss function specific to the task. For instance, $\ell$ is
+cross-entropy loss for a (multiclass) classification problem, and $\ell$ is
+mean-squared-error for a regression problem, which correspond to
+log-likelihoods in Categorical and Gaussian models, respectively. 
+
 
 
 \section{Inference (or Training)}
@@ -184,19 +228,18 @@ high compression rate.
 \label{subsec:kd}
 
 In this paper, we limit our purview to text classification tasks. Training
-neural-network-based systems for this task typically consists of a form of
-gradient descent based on a differentiable loss function which takes in the
-prediction for a given example and the correct label. That is, if we have
+neural-network-based systems for this task typically consists of
+gradient-descent-based optimizers applied to a differentiable loss
+function, which takes in the prediction for a given example and the correct label. That is, if we have
 training data $(\bm{x}_i, y_i)$ and model $f$, we would aim to minimize,
 \[ \ell(f(\bm{x_i}), y_i)\]
-where usually the loss function is taken to be Cross-Entropy loss. When we
+where usually the loss function is taken to be cross-entropy loss. When we
 already have a model $f$ that performs well, we can leverage this training
 paradigm through a modification called \emph{knowledge distillation}. Given
 the large model that performs well, termed the \emph{teacher network}, we
 train a smaller network $g$, the \emph{student network}, by minimizing,
 \[ \ell(g(\bm{x_i}), f(\bm{x_i})).\]
-Here, we can no longer use Cross-Entropy loss because $f(\bm{x}_i)$ is a
-probability distribution rather than a specific label. However, we can take
+We can take
 $\ell$ to be either mean-square error (MSE) between the probabilities in
 log-space, or Kullback-Leibler (KL) loss. We avoid MSE error on the
 probabilities themselves because of disappearing gradients when the predicted
@@ -220,15 +263,15 @@ what the coin came up, it will in less time understand that the probability is
 always 50\%.
 
 An additional benefit from knowledge distillation arises from BERT's
-pre-training. Because BERT is pre-trained on large amounts of unstructured
+pretraining. Because BERT is pretrained on large amounts of unstructured
 data, it contains a powerful language model which likely would be impossible
-to learn from the specific task's data-set. To an extent, relevant features
+to learn from the specific task's dataset. To an extent, relevant features
 from this language model are what make BERT so powerful once it's fine-tuned.
 Training the student network on BERT's output thus allows some of this
 ``outside knowledge'' to percolate toward the student network.
 
 To provide a concrete example of how this might work, suppose BERT captures
-from its pre-training that ``bad'', ``horrible,'' and ``terrible'' are
+from its pretraining that ``bad'', ``horrible,'' and ``terrible'' are
 approximate synonyms. In a sentiment task, these three words appear in three
 different sentences, two of which are negative, and one of which is positive.
 A fine-tuned BERT may predict a lower likelihood of being positive to the
@@ -240,7 +283,7 @@ our teacher network and train a simpler model to emulate the predictions. For
 the student network, we use both a CNN and an LSTM, specified further in
 \cref{sec:model}.
 
-\subsection{Deep Twist}
+\subsection{DeepTwist}
 
 Knowledge distillation operates by passing knowledge from a teacher network to a
 student network. There is no requirement that these networks resemble each other
@@ -249,26 +292,26 @@ architecture we've had success with.
 
 To this end, we follow the framework put forward by \citet{lee2018deeptwist},
 \emph{DeepTwist}, whose training loop is characterized by \cref{algo:deeptwist}.
-Training of the model closely resembles SGD with one important modification:
-every $S_d$ batches, the model weights are transformed by a \emph{distortion}
-function. 
+Training of the model closely resembles normal gradient training with one
+important modification: every $S_d$ batches, the model weights are transformed
+by a \emph{distortion} function.
 
 \begin{algorithm}
   \begin{algorithmic}
     \STATE{$n \leftarrow$ number of batches per epoch}
-    \STATE{$\theta \leftarrow$ initialization of model parameters}
+    \STATE{$\btheta \leftarrow$ initialization of model parameters}
     \STATE{$k \leftarrow$ number of epochs to train}
     \STATE{$S_d \leftarrow$ distortion step}
     \FOR{$i=0$ to $k \cdot n$}
       \STATE{batch $\leftarrow$ batches[$i \pmod n$]}
-      \STATE{$\theta \leftarrow \theta - \eta \nabla \ell(\theta,
+      \STATE{$\btheta \leftarrow \btheta - \eta \nabla \ell(\btheta,
       \text{batch})$}
       \COMMENT{gradient step}
       \IF{$i \equiv 0 \pmod{S_d}$}
-        \STATE{$\theta \leftarrow \distortion(\theta)$}
+        \STATE{$\btheta \leftarrow \distortion(\btheta)$}
       \ENDIF
     \ENDFOR
-    \STATE{$\theta \leftarrow \distortion(\theta)$}
+    \STATE{$\btheta \leftarrow \distortion(\btheta)$}
   \end{algorithmic}
   \caption{DeepTwist Training Loop}
   \label{algo:deeptwist}
@@ -277,47 +320,23 @@ function.
 We have significant flexibility in picking a distortion function, but in order
 to be useful, it must provide compression benefits. That is, the image of the
 distortion function should have a parameterization that takes less space in
-memory than then range of all possible $\theta$s. For example, if $\theta \in
+memory than then range of all possible $\btheta$s. For example, if $\btheta \in
 \mathbb{R}^{m,n}$, and the distortion produces a matrix of rank 1, then any
-distorted matrix could be uniquely identified by $\theta' \in \mathbb{R}^{n+m}$
+distorted matrix could be uniquely identified by $\btheta' \in \mathbb{R}^{n+m}$
 through a matrix factorization.
 
-It is important to note that while $\theta$ will be compressible immediately
+It is important to note that while $\btheta$ will be compressible immediately
 after a distortion step, there is no guarantee that it will remain so after some
 gradient steps. In fact, almost surely it will not be. Thus, we also enforce
 that the process ends on a distortion step.
 
-\section{Model}
-\label{sec:model}
-
-We first set up some notation. Let $F_\btheta = G_\bpsi \circ \bert_\bphi$ be
-a transformed model where $\btheta = (\bphi, \bpsi)$ be parameters of the
-subparts of the model. $\bert_\bphi$ is a BERT model where the pretrained
-weights are $\bphi_0 = (\bphi_0^i)_{i=1}^n$, and $G_\bpsi$ is additional
-layers for fine-tuning BERT, parameterized by $\bpsi$. We decompose the
-subparts of the model into layers: \begin{align*}
-\bert_\bphi &= f_{n}^{\bphi_n} \circ \cdots \circ f_1^{\bphi_1} \\
-G_\bpsi &= g_{m}^{\bpsi_m} \circ \cdots \circ g_1^{\bpsi_1}.
-\end{align*}
-
-% \subsection{DeepTwist-based Weight Distortions}
-
-
-Given training data $(\bm x_i, y_i)_{i=1}^N$, where $\bm x_i$ are one-hot
-encoded tokens, we train by solving the standard maximum likelihood problem
-where \[
-\min_{\btheta} \sum_{i=1}^N \ell\pr{y_i, F_\btheta(\bm x_i)}
-\]
-for some loss function specific to the task. For instance, $\ell$ is
-cross-entropy loss for a (multiclass) classification problem, and $\ell$ is
-mean-squared-error for a regression problem, which correspond to
-log-likelihoods in Categorical and Gaussian models, respectively. The
-innovation of DeepTwist-based training is perturbing the usual gradient-based
-optimization by repeatedly distorting the current weights to achieve
-compression objectives.
-
-Specifically, the DeepTwist framework presented in \Cref{sec:training} applies
-a distortion step for fixed intervals during training, where \[
+\section{Distortions}
+\label{sec:distortions}
+The innovation of DeepTwist-based training is perturbing the usual
+gradient-based optimization by repeatedly distorting the current weights to
+achieve compression objectives. Specifically, the DeepTwist framework presented
+in \Cref{sec:training} applies a distortion step for fixed intervals during
+training, where \[
 \btheta \gets \distortion(\btheta). 
 \]
 In this section, we discuss a few methods for parameterizing $\distortion$.
@@ -337,7 +356,8 @@ We list a few methods of parameterizing the distortion step.
   $t_p$ be the $p$-th quantile of the vector $\bvartheta$. Then \[
   \prune(\bvartheta; p) = \one(|\bvartheta| > t_p) \odot \bvartheta
   \]
-  be the vector where values in $\bvartheta$ below $t_p$ are zeroed. 
+  is the vector where values in $\bvartheta$ below in absolute magnitude $t_p$
+  are zeroed. 
   
   Pruning is an extremely simple procedure. When $p$ is large, say, $p=0.99$,
   we may take advantage of sparsity of the resulting model by saving locations
@@ -348,7 +368,7 @@ We list a few methods of parameterizing the distortion step.
   
   Pruning is an out-of-the-box procedure that works with any models. However,
   as a price of the generality, pruning fails to be tailored to the nature of
-  BERT being a pre-trained model. Suppose the pretrained weights $\bphi_0 $
+  BERT being a pretrained model. Suppose the pretrained weights $\bphi_0 $
   capture certain structure of language, then dramatic distortions to
   $\bphi_0$ essentially discards the information, especially early in the
   training loop. We may partially remedy this issue by either using a dynamic
@@ -395,78 +415,11 @@ values in $U,V$. If we keep only the $r$ largest spectral values, then we store
 $\tilde U \tilde \Sigma$, an $n\times r$ matrix, and $\tilde V$, an $m\times r$
 matrix. Thus, instead of storing $2nm$ floats, we may store $r(n+m)$, achieving
 a compression rate of \[
-\rho = \frac{r(n+m)}{2mn}.
+\rho = 1-\frac{r(n+m)}{2mn}.
 \]
 Note however, that storing matrices in this manner requires an additional
 matrix multiplication in evaluation time, since we have to compute the product
-$\tilde U \tilde \Sigma \tilde V$.
-
-% \subsection{Knowledge Distillation}
-
-
-% Example Structure:
-
-% \begin{itemize}
-% \item What is the formal definition of your problem?
-% \item What is the precise mathematical model you are using to represent it? In
-% almost all cases this will use the probabilistic language from class, e.g.
-%   \begin{equation}
-%   z \sim {\cal N}(0, \sigma^2)\label{eq:1}
-% \end{equation}
-% But it may also be a neural network, or a non-probabilistic loss,
-% \[ h_t \gets \mathrm{RNN}(x_{t}, h_{t-1} )\]
-
-% This is also a good place to reference a diagram such as Figure~\ref{fig:diagram}.
-
-% \item What are the parameters or latent variables of this model that you plan
-% on estimating or inferring? Be explicit. How many are there? Which are you
-% assuming are given? How do these relate to the original problem description?
-% \end{itemize}
-
-
-
-% \begin{figure}
-%   \centering
-%   \missingfigure[figheight=8cm]{}
-%   \caption{\label{fig:diagram} This is a good place to include a diagram
-%   showing how your model works. Examples include a graphical model or a neural
-%   network block diagram.}
-% \end{figure}
-
-% \subsection{Knowledge Distillation}
-
-
-% Example Structure:
-
-% \begin{itemize}
-% \item What is the formal definition of your problem?
-% \item What is the precise mathematical model you are using to represent it? In
-% almost all cases this will use the probabilistic language from class, e.g.
-%   \begin{equation}
-%   z \sim {\cal N}(0, \sigma^2)\label{eq:1}
-% \end{equation}
-% But it may also be a neural network, or a non-probabilistic loss,
-% \[ h_t \gets \mathrm{RNN}(x_{t}, h_{t-1} )\]
-
-% This is also a good place to reference a diagram such as Figure~\ref{fig:diagram}.
-
-% \item What are the parameters or latent variables of this model that you plan
-% on estimating or inferring? Be explicit. How many are there? Which are you
-% assuming are given? How do these relate to the original problem description?
-% \end{itemize}
-
-
-
-% \begin{figure}
-%   \centering
-%   \missingfigure[figheight=8cm]{}
-%   \caption{\label{fig:diagram} This is a good place to include a diagram
-%   showing how your model works. Examples include a graphical model or a neural
-%   network block diagram.}
-% \end{figure}
-
-
-
+$\tilde U \tilde \Sigma \tilde V$. 
 
 \section{Methods}
 In this section, we briefly discuss our experimental setup. We mostly
@@ -479,15 +432,7 @@ train with a maximum sequence length of 64 and batch size of 32 on the
 NC-6 and NC-12 virtual machines on Microsoft Azure. We use the basic 
 \texttt{BERT-base-uncased} model for our experimental results. We employ
 early stopping in training, with patience of 1 epoch, and early stopping is
-guided by validation error. 
-
-\subsection{DeepTwist}
-We implement the DeepTwist framework with default frequency of distortion
-every 10 batches. Additionally, we ensure that training ends on a
-distortion step, so that the model produced by training has compression
-benefits. For $\prune$ and $\diffprune$ distortions, we use a single
-pruning rate held fixed throughout training. 
-
+guided by validation loss. 
 
 \subsection{Knowledge Distillation}
 
@@ -498,111 +443,96 @@ feed the embeddings through an LSTM. We then map the last hidden state of the
 LSTM through a linear layer for classification.  \paragraphdot{CNN} We use an
 implementation\footnote{\url{https://github.com/jfilter/cnn-text-classification-pytorch/blob/master/cnn_text_classification/model.py}}
 of \citet{kim2014convolutional} with kernel sizes $(3,4,5)$, hidden size
-$H=300$, no dropout, and $20$ kernels for each kernel size.\footnote{These are
-default in the implementation we used.} 
+$H=300$, no dropout and 50\% dropout, and $20$ kernels for each kernel
+size.\footnote{These are default in the implementation we used.} 
 
 For each model, we initialize the embedding layer of the model with the
 first $H$ dimensions of the corresponding embedding layer in pretrained
 BERT. 
 
-
+\subsection{DeepTwist}
+We implement the DeepTwist framework with default frequency of distortion
+every 10 batches. Additionally, we ensure that training ends on a
+distortion step, so that the model produced by training has compression
+benefits. For $\prune$ and $\diffprune$ distortions, we use a single
+pruning rate held fixed throughout training. 
 
 \section{Results}
 
-\begin{itemize}
-\item What were the results comparing previous work / baseline systems / your
-systems on the main task?
-\item What were the secondary results comparing the variants of your system?
-\item This section should be fact based and relatively dry. What happened, what
-was significant?
-\end{itemize}
+We show our results in \Cref {tab:deeptwist_results,tab:kd_results}. In the top
+pane of \Cref {tab:deeptwist_results}, we show the result of various
+DeepTwist-based compression techniques on the sentiment classification task,
+SST-2, stratifying by method and then by parameter of the method. Difference
+pruning, pruning, and rank reduction are implemented as \emph{distortion by
+layer} (see \Cref{sec:model}), where as \emph{difference pruning (global)}
+indicates difference pruning, but pooling all parameter values from all layers.
+The bottom pane of \Cref{tab:deeptwist_results} shows the performance on QQP of
+some competitive-performing model setups on SST-2, which are all
+difference-pruning based. In \Cref{tab:kd_results}, we present some knowledge
+distillation experiments, with the student network being an LSTM or a CNN, with
+or without dropout \citep{kim2014convolutional}. 
 
-% \begin{table*}
-%   \centering
-%   \missingfigure{}
-%   \caption{This is usually a table. Tables with numbers are generally easier
-%   to read than graphs, so prefer when possible.}
-%   \label{fig:mainres}
-% \end{table*}
-
-
-% \begin{table}[tbh]
-%         \caption{Results for DeepTwist}
-%         \label{tab:deeptwist_results}
-%         \centering
-%         \vspace{1em}
-%         \begin{tabular}{lccccc}
-% \toprule
-% {} &               type &  param &  val loss &   val acc \\
-% {} & 
-% \hypertarget{tabcol:1}{(1)} & \hypertarget{tabcol:2}{(2)} & \hypertarget{tabcol:3}{(3)} & \hypertarget{tabcol:4}{(4)} \\ \midrule
-% 0  &  diff prune global &   $90$ &   $0.211$ &   $0.912$ \\
-% 1  &              prune &   $20$ &   $0.291$ &   $0.886$ \\
-% 2  &              prune &   $80$ &   $0.532$ &   $0.767$ \\
-% 3  &         diff prune &   $80$ &   $0.222$ &   $0.916$ \\
-% 4  &  diff prune global &   $99$ &       --- &       --- \\
-% 5  &  diff prune global &   $90$ &   $0.213$ &   $0.916$ \\
-% 6  &         diff prune &   $40$ &   $0.203$ &   $0.909$ \\
-% 7  &                svd &   $50$ &   $0.490$ &   $0.810$ \\
-% 8  &                svd &  $200$ &   $0.459$ &   $0.845$ \\
-% 9  &              prune &   $40$ &   $0.424$ &   $0.845$ \\
-% 10 &              prune &   $60$ &   $0.425$ &   $0.815$ \\
-% 11 &  diff prune global &   $99$ &   $0.230$ &   $0.901$ \\
-% 12 &  diff prune global &   $99$ &   $0.222$ &   $0.905$ \\
-% 13 &         diff prune &   $99$ &   $0.222$ &   $0.913$ \\
-% 14 &         diff prune &   $95$ &   $0.221$ &   $0.916$ \\
-% 15 &         diff prune &   $90$ &   $0.216$ &   $0.916$ \\
-% 16 &         diff prune &   $60$ &   $0.209$ &   $0.920$ \\
-% 17 &                svd &  $100$ &   $0.515$ &   $0.823$ \\
-% 18 &                svd &  $150$ &   $0.456$ &   $0.828$ \\
-% 19 &         diff prune &   $80$ &   $2.533$ &   $0.491$ \\
-% 20 &         diff prune &   $90$ &       --- &       --- \\
-% 21 &  diff prune global &    $0$ &   $0.738$ &   $0.509$ \\
-% 22 &         diff prune &    $0$ &   $0.692$ &   $0.522$ \\
-% 23 &         diff prune &    $0$ &   $1.854$ &   $0.491$ \\
-% \bottomrule
-% \end{tabular}
-
-% \end{table}
+Pruning admits a simple upper bound for compression, which is simply the
+pruning ratio.\footnote{The exact compression rate is complicated, due to
+the sparse data structure implemented for the compressed model} Compression
+rate for difference pruning depends on the number of tasks the user
+desires to perform, since difference pruning is understood to be a form of
+weight sharing. In that context, the (upper bound) compression rate of
+difference
+pruning
+is also self-evident. The compression rate achieved by rank reduction is \[
+\rho = 1 - \frac{r(n+m)}{2mn}.
+\]
+Since most matrices in \texttt{BERT-base-uncased} is $768\times 768,$ the
+compression rate is approximately \[
+\rho \approx 1 - \frac{r}{768} = (74.0\%,
+80.5\%,
+87.0\%,
+93.5\%)
+\]
+for $r = (200,150,100,50)$, respectively.
+ 
+For the most part, difference pruning seems to be robust to the pruning
+rate. As a sanity check, we include difference pruning with 100\% pruning
+rate, which is equivalent to BERT model without fine-tuning, and obtaining
+essentially uniform results on the validation set. Difference pruning also
+seems to outperform both ``first-order'' DeepTwist techniques, pruning and
+rank reduction, which is unsurprising as difference pruning uses more
+parameters and uses parameters that are pretrained. Difference pruning also
+seems to extend to other tasks in GLUE, as it retains its behavior in
+SST-2 to QQP, for the most part. Knowledge distillation seems less
+promising. While knowledge distillation
+slightly improves upon the model directly trained on data, it does not
+fully replicate the performance of the teacher network. We now discuss our
+results in detail.
 
 \input{../tabs/hierarchical_deeptwist_table.tex}
 
 \input{../tabs/kd_table.tex}
 
-% \begin{table}[tbh]
-%         \caption{Results for Knowledge Distillation}
-%         \label{tab:kd_results}
-%         \centering
-%         \vspace{1em}
-%         \begin{tabular}{lccccccc}
-% \toprule
-% {} &  framework &  type &  val loss &  ß val acc \\
-% {} & \hypertarget{tabcol:1}{(1)} & \hypertarget{tabcol:2}{(2)} & \hypertarget{tabcol:3}{(3)} & \hypertarget{tabcol:4}{(4)} \\
-% \midrule
-% 0 &        nokd &   CNN &   $0.906$ &   $0.799$ \\
-% 1 &        nokd &   CNN &   $0.448$ &   $0.784$ \\
-% 2 &        nokd &   CNN &   $0.856$ &   $0.812$ \\
-% 3 &          kd &  LSTM &   $0.738$ &   $0.831$ \\
-% 4 &          kd &   CNN &   $0.423$ &   $0.834$ \\
-% \bottomrule
-% \end{tabular}
-% \label{tbl:kdresults}
-% \end{table}
-
 \section{Discussion}
+
+
+\begin{figure*}[htb]
+\centering
+\includegraphics[width=\textwidth]{../figs/kd_lstm_training.png}
+\caption{Training loss (left), val. loss (middle), and val. accuracy
+(right) plotted against number of batches of training for LSTM KD}
+\label{fig:kdlstmloss}
+\end{figure*}
 
 Our most striking result is the robust performance of difference pruning. Even
 keeping upwards of 99\% of the weights unchanged gives us performance that is
 very competitive with the unrestricted model. Most of our experiments are on
 SST-2, but we see success with this method on QQP as well, suggesting that
-small changes to pre-trained BERT are sufficient for performance on a specific
+small changes to pretrained BERT are sufficient for performance on a specific
 task. 
 
-As expected, pruning a higher proportion of the weights decreases performance,
-but we are happily surprised at the relatively low magnitude of this effect even
-at high prune rates. Pruning with a global threshold rather than in a
-stratified way produces distinctly worse results. We suspect this is due to
-weights in different layers having different magnitudes, making a global
+As expected, difference pruning a higher proportion of the weights decreases
+performance, but we are happily surprised at the relatively low magnitude of
+this effect even at high prune rates. Pruning with a global threshold rather
+than in a stratified way produces distinctly worse results. We suspect this is
+due to weights in different layers having different magnitudes, making a global
 threshold have an undue effect on layers whose weights tend to be smaller. We
 confirm this heterogeneity in \cref{fig:weightsbylayer}.
 
@@ -614,28 +544,29 @@ confirm this heterogeneity in \cref{fig:weightsbylayer}.
 \end{figure}
 
 Our non-difference distortions are more sensitive to the compression parameter
-(whether prune rate or SVD rank). We find it difficult to achieve performance
+(whether prune rate or rank reduction rank). We find it difficult to achieve performance
 comparable to the uncompressed BERT with a significantly compressed model. Among
 the different distortion methods, we favor pruning for its computational
-simplicity, and see no evidence that SVD achieves better compression.
+simplicity, and see no evidence that rank reduction achieves better compression.
 
-% Things to say about DeepTwist
-% \begin{itemize}
-%   \item Stratified prune better
-%   \item Prune rate mad robust
-%   \item Diff gud
-%   \item ``Improved performance''
-%   \item QQP takes long, but looks okay
-%   \item Didn't try only pruning the $\bert$ part
-% \end{itemize}
-% 
-% Things to say about KD
-% \begin{itemize}
-%   \item it bad
-%   \item doesn't work
-%   \item LSTM weird/CNN incredibly noisy
-%   \item \TODO{compare}
-% \end{itemize}
+Remarkably, the fact that pruning and rank reduction incurs significant
+losses to the
+model seems to show that popular compression techniques that enjoy success
+in convolutional neural networks fail to generalize good performance to
+transformer-based language networks like BERT. We present some preliminary
+evidence in \Cref{fig:singular-values}, where we plot the singular values
+in one of the matrices in BERT. The effective rank of the matrix seems
+quite high, as the singular values are all sizable, decaying at a rate too
+slow for rank reduction techniques to be promising. This suggests that
+matrices in BERT are in fact effectively dense, unlike CNNs, where
+good compression relies on the effective sparsity of the matrices. 
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.5\textwidth]
+    {../figs/svd-singular-vals-distribution.png}
+    \caption{Distribution of singular values in one of BERT layers}
+    \label{fig:singular-values}
+\end{figure}
 
 When compared to the performance of a fine-tuned BERT on SST-2, our Knowledge
 Distillation results---displayed in \cref{tab:kd_results}---fall short. However,
@@ -655,55 +586,58 @@ normal curve from that point forward. We find this---depicted in
 effect of our adaptive learning rate starting out too low and taking multiple
 epochs to grow to a point where it can meaningfully update parameters. 
 
-\begin{figure*}[tb]
-\centering
-\includegraphics[width=\textwidth]{../figs/kd_lstm_training.png}
-\caption{Training loss (left), val. loss (middle), and val. accuracy
-(right) for LSTM KD}
-\label{fig:kdlstmloss}
-\end{figure*}
-
-% \begin{itemize}
-% \item What conclusions can you draw from the results section?
-% \item Is there further analysis you can do into the results of the system? Here
-% is a good place to include visualizations, graphs, qualitative analysis of your
-% results.
-% 
-% \item  What questions remain open? What did you think might work, but did not?
-% \end{itemize}
-
-
-
-% \begin{figure}
-%   \centering
-%   \missingfigure{}
-%   \missingfigure{}
-%   \missingfigure{}
-%   \caption{Visualizations of the internals of the system.}
-% \end{figure}
-
 \section{Conclusion}
 
-\begin{itemize}
-\item What happened?
-\item What next?
-\end{itemize}
+Knowledge Distillation displayed promise by improving student networks'
+performance versus training only on the classes $y_i$. However, the student
+networks fell short of replicating uncompressed BERT's performance. It is
+possible that future variations on our work could achieve competitive
+compression. In particular, we restrict our knowledge distillation only to the
+samples in the original training set. However, there is no need to perform
+training so narrowly since the teacher network can annotate any unsupervised
+data. It is likely that doing so would further increase performance, though we
+can only speculate as to the magnitude of the benefit.
 
+It is also possible that our choice of student network colored our results. We
+aimed for architectures known to work on SST-2 while being much smaller, such as
+\citet{kim2014convolutional}'s CNN. It is possible that we aimed too small and
+would be better served by a more complex model---possibly even a smaller version
+of BERT. Finally, in all our experiments our teacher network is a single
+fine-tuned version of BERT. Since teacher network complexity doesn't contribute
+to the complexity of the final model, we could instead use an ensemble of BERTs
+(or even other models) as our teacher network.
 
+The DeepTwist framework---particularly when combined with difference
+pruning---exceeded our expectations for compression. It would be interesting to
+test whether this generalizes to a wider array of tasks, particularly since we
+only reap compression benefits as we leverage weight sharing over a number of
+tasks. Furthermore, from the distortions presented in \citet{lee2018deeptwist},
+we did not implement clustering-based quantization because of the significant
+computational bottleneck clustering with $k$-means on all of BERT's parameters
+posed. Future work could attempt to surmount this obstacle whether through
+increased computational resources or a more scalable clustering algorithm.
 
-% \section*{Acknowledgements}
+Finally, we recognize our approaches are but a subset of the ways to go about
+compressing large language models such as BERT. Two alternatives stand out as
+particularly exciting possible future directions. \citet{liu2019multi} propose a
+method for complete weight sharing of BERT's encoder parameters across different
+tasks by simultaneously training for all tasks. We believe this approach could
+be relaxed through difference pruning to achieve a performance gain relative to
+each compression technique in isolation. 
 
-% \textbf{Do not} include acknowledgements in the initial version of
-% the paper submitted for blind review.
+\citet{frankle2018lottery} articulate in their ``lottery ticket hypothesis''
+that most networks contain sparse sub-networks which can perform similarly well.
+They provide an algorithm for finding these ``lottery tickets'' whose main
+differences to DeepTwist are (1) that weights that get distorted to 0 are
+permanently masked and kept at 0, and (2) that the algorithm progressively
+increases the pruning rate. This framework could serve as a competitive
+alternative to DeepTwist, and it would be interesting to see how it performs
+with difference pruning.
 
-% If a paper is accepted, the final camera-ready version can (and
-% probably should) include acknowledgements. In this case, please
-% place such acknowledgements in an unnumbered section at the
-% end of the paper. Typically, this will include thanks to reviewers
-% who gave useful comments, to colleagues who contributed to the ideas,
-% and to funding agencies and corporate sponsors that provided financial
-% support.
+\section*{Acknowledgements}
 
+We thank Alexander M. Rush and the Harvard CS 287 community, without whom
+this work would not have been possible.
 
 \bibliography{paper}
 \bibliographystyle{icml2017}
