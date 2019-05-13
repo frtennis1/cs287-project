@@ -42,36 +42,17 @@
 ]
 
 \begin{abstract}
-% \raggedright
-  We apply model compression techniques to fine-tuned BERT on multiclass
-  classification problems.  Knowledge distillation and DeepTwist-based compression techniques give
-  us moderate compression benefits for a commensurate decrease in model
-  performance. We achieve our most compelling results from employing the DeepTwist
-  framework to share weights across BERT models fine-tuned for different tasks. Our work demonstrates most weights need not change in the fine-tuning
-  process.
-%   \item This document describes the expected style, structure, and rough
-%   proportions for your final project write-up.
-%   \item While you are free to break from this structure, consider it a strong
-%   prior for our expectations of the final report.
-%   \item Length is a hard constraint. You are only allowed max \textbf{8 pages}
-%   in this format. While you can include supplementary material, it will not be
-%   factored into the grading process. It is your responsibility to convey the
-%   main contributions of the work in the length given.
-  % \end{itemize}
-
-
-
+We apply model compression techniques to fine-tuned BERT on multiclass
+classification problems.  Knowledge distillation and DeepTwist-based compression
+techniques give us moderate compression benefits for a commensurate decrease in
+model performance. We achieve our most compelling results from employing the
+DeepTwist framework to share weights across BERT models fine-tuned for different
+tasks. Our work demonstrates most weights need not change in the fine-tuning
+process.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:introduction}
-
-% Example Structure:
-% \begin{itemize}
-% \item What is the problem of interest and what (high-level) are the current best methods for solving it?
-% \item How do you plan to improve/understand/modify this or related methods?
-% \item Preview your research process, list the contributions you made, and summarize your experimental findings.
-% \end{itemize}
 
 Deep Neural Networks (DNNs) have become the state-of-art for many tasks in
 language modeling. At the same time, they have become progressively larger in
@@ -112,15 +93,6 @@ extra storage space requirements.
 
 \section{Background}
 
-% Example Structure:
-% \begin{itemize}
-% \item What information does a non-expert need to know about the problem domain?
-% \item What data exists for this problem?
-% \item What are the challenges/opportunities inherent to the data? (High
-% dimensional, sparse, missing data, noise, structure, discrete/continuous,
-% etc?)
-% \end{itemize}
-
 DNNs have become extremely large in size with growing complexities. A good
 example is BERT \citep{devlin2018bert}, which represents a growing
 literature in natural language processing in favor of pretraining 
@@ -155,14 +127,6 @@ and named entity recognition.
 
 
 \section{Related Work}
-
-% Example Structure:
-% \begin{itemize}
-% \item What 3-5 papers have been published in this space?
-% \item How do these  differ from your approach?
-% \item What data or methodologies do each of these works use?
-% \item How do you plan to compare to these methods?
-% \end{itemize}
 
 There is a rich literature on compressing deep learning models, a selection
 of which we review in this section. For a comprehensive review, see  
@@ -527,86 +491,9 @@ slightly improves upon the model directly trained on data, it does not
 fully replicate the performance of the teacher network. We now discuss our
 results in detail.
 
-% \begin{itemize}
-% \item What were the results comparing previous work / baseline systems / your
-% systems on the main task?
-% \item What were the secondary results comparing the variants of your system?
-% \item This section should be fact based and relatively dry. What happened,
-% what was significant?
-% \end{itemize}
-
-% \begin{table*}
-%   \centering
-%   \missingfigure{}
-%   \caption{This is usually a table. Tables with numbers are generally easier
-%   to read than graphs, so prefer when possible.}
-%   \label{fig:mainres}
-% \end{table*}
-
-
-% \begin{table}[tbh]
-%         \caption{Results for DeepTwist}
-%         \label{tab:deeptwist_results}
-%         \centering
-%         \vspace{1em}
-%         \begin{tabular}{lccccc}
-% \toprule
-% {} &               type &  param &  val loss &   val acc \\
-% {} & 
-% \hypertarget{tabcol:1}{(1)} & \hypertarget{tabcol:2}{(2)} & \hypertarget{tabcol:3}{(3)} & \hypertarget{tabcol:4}{(4)} \\ \midrule
-% 0  &  diff prune global &   $90$ &   $0.211$ &   $0.912$ \\
-% 1  &              prune &   $20$ &   $0.291$ &   $0.886$ \\
-% 2  &              prune &   $80$ &   $0.532$ &   $0.767$ \\
-% 3  &         diff prune &   $80$ &   $0.222$ &   $0.916$ \\
-% 4  &  diff prune global &   $99$ &       --- &       --- \\
-% 5  &  diff prune global &   $90$ &   $0.213$ &   $0.916$ \\
-% 6  &         diff prune &   $40$ &   $0.203$ &   $0.909$ \\
-% 7  &                rank reduction &   $50$ &   $0.490$ &   $0.810$ \\
-% 8  &                rank reduction &  $200$ &   $0.459$ &   $0.845$ \\
-% 9  &              prune &   $40$ &   $0.424$ &   $0.845$ \\
-% 10 &              prune &   $60$ &   $0.425$ &   $0.815$ \\
-% 11 &  diff prune global &   $99$ &   $0.230$ &   $0.901$ \\
-% 12 &  diff prune global &   $99$ &   $0.222$ &   $0.905$ \\
-% 13 &         diff prune &   $99$ &   $0.222$ &   $0.913$ \\
-% 14 &         diff prune &   $95$ &   $0.221$ &   $0.916$ \\
-% 15 &         diff prune &   $90$ &   $0.216$ &   $0.916$ \\
-% 16 &         diff prune &   $60$ &   $0.209$ &   $0.920$ \\
-% 17 &                rank reduction &  $100$ &   $0.515$ &   $0.823$ \\
-% 18 &                rank reduction &  $150$ &   $0.456$ &   $0.828$ \\
-% 19 &         diff prune &   $80$ &   $2.533$ &   $0.491$ \\
-% 20 &         diff prune &   $90$ &       --- &       --- \\
-% 21 &  diff prune global &    $0$ &   $0.738$ &   $0.509$ \\
-% 22 &         diff prune &    $0$ &   $0.692$ &   $0.522$ \\
-% 23 &         diff prune &    $0$ &   $1.854$ &   $0.491$ \\
-% \bottomrule
-% \end{tabular}
-
-% \end{table}
-
 \input{../tabs/hierarchical_deeptwist_table.tex}
 
 \input{../tabs/kd_table.tex}
-
-
-% \begin{table}[tbh]
-%         \caption{Results for Knowledge Distillation}
-%         \label{tab:kd_results}
-%         \centering
-%         \vspace{1em}
-%         \begin{tabular}{lccccccc}
-% \toprule
-% {} &  framework &  type &  val loss &  ß val acc \\
-% {} & \hypertarget{tabcol:1}{(1)} & \hypertarget{tabcol:2}{(2)} & \hypertarget{tabcol:3}{(3)} & \hypertarget{tabcol:4}{(4)} \\
-% \midrule
-% 0 &        nokd &   CNN &   $0.906$ &   $0.799$ \\
-% 1 &        nokd &   CNN &   $0.448$ &   $0.784$ \\
-% 2 &        nokd &   CNN &   $0.856$ &   $0.812$ \\
-% 3 &          kd &  LSTM &   $0.738$ &   $0.831$ \\
-% 4 &          kd &   CNN &   $0.423$ &   $0.834$ \\
-% \bottomrule
-% \end{tabular}
-% \label{tbl:kdresults}
-% \end{table}
 
 \section{Discussion}
 
@@ -641,8 +528,6 @@ confirm this heterogeneity in \cref{fig:weightsbylayer}.
 \label{fig:weightsbylayer}
 \end{figure}
 
-
-
 Our non-difference distortions are more sensitive to the compression parameter
 (whether prune rate or rank reduction rank). We find it difficult to achieve performance
 comparable to the uncompressed BERT with a significantly compressed model. Among
@@ -668,24 +553,6 @@ good compression relies on the effective sparsity of the matrices.
     \label{fig:singular-values}
 \end{figure}
 
-% Things to say about DeepTwist
-% \begin{itemize}
-%   \item Stratified prune better
-%   \item Prune rate mad robust
-%   \item Diff gud
-%   \item ``Improved performance''
-%   \item QQP takes long, but looks okay
-%   \item Didn't try only pruning the $\bert$ part
-% \end{itemize}
-% 
-% Things to say about KD
-% \begin{itemize}
-%   \item it bad
-%   \item doesn't work
-%   \item LSTM weird/CNN incredibly noisy
-%   \item \TODO{compare}
-% \end{itemize}
-
 When compared to the performance of a fine-tuned BERT on SST-2, our Knowledge
 Distillation results---displayed in \cref{tab:kd_results}---fall short. However,
 it is important to note the student networks are also much smaller than BERT. To
@@ -703,27 +570,6 @@ normal curve from that point forward. We find this---depicted in
 \cref{fig:kdlstmloss}---remarkably puzzling. We hypothesize this may be the
 effect of our adaptive learning rate starting out too low and taking multiple
 epochs to grow to a point where it can meaningfully update parameters. 
-
-
-
-% \begin{itemize}
-% \item What conclusions can you draw from the results section?
-% \item Is there further analysis you can do into the results of the system? Here
-% is a good place to include visualizations, graphs, qualitative analysis of your
-% results.
-% 
-% \item  What questions remain open? What did you think might work, but did not?
-% \end{itemize}
-
-
-
-% \begin{figure}
-%   \centering
-%   \missingfigure{}
-%   \missingfigure{}
-%   \missingfigure{}
-%   \caption{Visualizations of the internals of the system.}
-% \end{figure}
 
 \section{Conclusion}
 
@@ -767,30 +613,16 @@ each compression technique in isolation.
 \citet{frankle2018lottery} articulate in their ``lottery ticket hypothesis''
 that most networks contain sparse sub-networks which can perform similarly well.
 They provide an algorithm for finding these ``lottery tickets'' whose main
-differences to DeepTwist are (1) that weights that get distorted to 0 are permanently
-masked and kept at 0, and (2) that the algorithm progressively increases the
-pruning rate. This framework could serve as a competitive alternative to
-DeepTwist, and it would be interesting to see how it performs with difference
-pruning.
+differences to DeepTwist are (1) that weights that get distorted to 0 are
+permanently masked and kept at 0, and (2) that the algorithm progressively
+increases the pruning rate. This framework could serve as a competitive
+alternative to DeepTwist, and it would be interesting to see how it performs
+with difference pruning.
 
 \section*{Acknowledgements}
 
 We thank Alexander M. Rush and the Harvard CS 287 community, without whom
 this work would not have been possible.
-
-% TODO: thank Rush + 287
-
-% \textbf{Do not} include acknowledgements in the initial version of
-% the paper submitted for blind review.
-
-% If a paper is accepted, the final camera-ready version can (and
-% probably should) include acknowledgements. In this case, please
-% place such acknowledgements in an unnumbered section at the
-% end of the paper. Typically, this will include thanks to reviewers
-% who gave useful comments, to colleagues who contributed to the ideas,
-% and to funding agencies and corporate sponsors that provided financial
-% support.
-
 
 \bibliography{paper}
 \bibliographystyle{icml2017}
