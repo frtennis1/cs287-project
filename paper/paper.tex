@@ -104,7 +104,7 @@ model achieves 92.9\% validation accuracy on SST-2, the difference pruning model
 that keeps 99\% of the pretrained BERT weights achieves 91.3\% on the validation
 set, which is on par with the fully fine-tuned model. This enables multiple
 language modeling tasks to share the weights of pretrained BERT, each incurring
-minimal extra storage space requirements.
+minimal extra storage space requirements.\footnote{Code available at \url{https://github.com/frtennis1/cs287-project}}
 
 \section{Background}
 
@@ -135,8 +135,7 @@ input to be running locally instead of sending information to the cloud. Last
 but not least, evaluating enormous models takes too much time on mobile
 devices and can drain batteries significantly.
 
-The challenge that we are facing is therefore how to compress DNNs in size
-while keeping their predictive performance competitive with full model. We are interested in compressing the language representation model BERT.  It is the state-of-art result in many natural
+We are interested in compressing the language representation model BERT.  It is the state-of-art result in many natural
 language processing tasks  such as natural language inference, paraphrasing
 and named entity recognition.
 
