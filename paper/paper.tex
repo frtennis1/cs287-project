@@ -121,8 +121,23 @@ extra storage space requirements.
 % etc?)
 % \end{itemize}
 
-DNNs have become extremely large in size with growing complexities. A BERT
-base model has 110M parameters and takes 438 MB disk space to store. This
+DNNs have become extremely large in size with growing complexities. A good
+example is BERT \citep{devlin2018bert}, which represents a growing
+literature in natural language processing in favor of pretraining 
+\citep{peters2018deep,radford2018improving,radford2019language}, which
+uses large models to learn from a large corpus of text in an unsupervised
+manner. The goal of such pretraining is creating contextualized
+representation of text in $\R^n$ which preserve certain structure of
+language. For different tasks, the researcher then \emph{fine-tunes} the
+pretrained model to the task, which may reach good performance since the
+pretrained representations are well-behaved representations of language
+strucutre. A downside of this framework is that each fine-tuned task
+requires a unique set of weights, which, when coupled with the raw size of
+these models, are cumbersome objects especially in a low hardware resource
+environment.
+
+The smaller \texttt{BERT-base-uncased} model has 110M parameters and takes
+438 MB disk space to store. This
 makes it very hard to deploy those models on mobile devices, which in most
 cases have limited storage and RAM and low computational resources. As a
 result, we are not able to store multiple models for different tasks on mobile
@@ -134,7 +149,9 @@ but not least, evaluating enormous models takes too much time on mobile
 devices and can drain batteries significantly.
 
 The challenge that we are facing is therefore how to compress DNNs in size
-while keeping their predictive performance competitive with full model.
+while keeping their predictive performance competitive with full model. We are interested in compressing the language representation model BERT.  It is the state-of-art result in many natural
+language processing tasks  such as natural language inference, paraphrasing
+and named entity recognition.
 
 
 \section{Related Work}
@@ -147,23 +164,50 @@ while keeping their predictive performance competitive with full model.
 % \item How do you plan to compare to these methods?
 % \end{itemize}
 
-We are interested in compressing the language representation model BERT
-\citep{devlin2018bert}.  It is the state-of-art result in many natural
-language processing tasks  such as natural language inference, paraphrasing
-and named entity recognition.
+There is a rich literature on compressing deep learning models, a selection
+of which we review in this section. For a comprehensive review, see  
+\citep{cheng2017survey}. The early work in compression is usually in a
+multi-stage framework, where model is trained, compressed, and then
+the compressed model is retrained for good performance. 
 
-\citet{cheng2017survey} provides a comprehensive overview of the state-of-art
-methods to compress DNNs. Of the methods summarized by the paper, the ones
-that are of interest to our work are weight-pruning and quantization
-\citep{han2015deep}, and low-rank factorization \citep{denton2014exploiting}.
-Knowledge distillation, first proposed by \citep{bucilua2006model} as
-``knowledge transfer'', was recently popularized by
-\citep{hinton2015distilling}. It differs from the previously mentioned methods
-since it compresses an existing model by replacing it with a simpler model
-that is trained on its outputs.
+\citet{han2015deep} applies compression techniques to computer vision,
+where convolutional neural networks are popular and are often
+overparameterized \citep{yang2019fsnet},
+where the network is gradually \emph{pruned} and retrained in the first
+stage, where small
+weights are set
+to zero and gradient connections severed. In the second stage, the weights
+that survived pruning are clustered, and each cluster behaves like a single
+weight, with identical gradients. In the last stage, the model is Huffman
+encoded. Numerical experiments by \citet{han2015deep} show that the
+compression does not seem to influence performance. Moreover, the benefits
+of various compression techniques appear to stack without much loss in
+compression benefit. Moreover, convolutional network sizes are dominated by
+the convolution operations in
+lower layers \citep{denton2014exploiting}. \citet{denton2014exploiting}
+uses matrix factorization techniques on the matrices in convolutional
+layers, which has low effective rank. 
 
-DeepTwist, a end-to-end training framework, allows us to incorporate
-compression procedures into training \citep{lee2018deeptwist}. Under this
+Pruning, quantization, and rank reduction are operations applied to a
+particular network's weights without altering the network architecture. 
+A different framework, knowledge distillation, first proposed by 
+\citep{bucilua2006model} as
+``knowledge transfer,'' was recently popularized by
+\citep{hinton2015distilling}. In knowledge distillation, a simple network,
+called the \emph{student network}, is not trained on the actual data but on
+the output of the large network one wishes to compress, called the 
+\emph{teacher network}. This procedure can even be extended by inserting
+various
+intermediate-sized networks between the teacher and student, intuitively
+termed
+\emph{teacher-assistant networks} \citep{mirzadeh2019improved}. We dicuss
+knowledge distillation in detail in \Cref{sec:training}.
+
+
+Compression techniques like pruning, quantization, and rank reduction can
+also be incorporated into an end-to-end framework, known as 
+\emph{DeepTwist}  \citep{lee2018deeptwist}, where training needs not be
+interrupted in some multi-stage process. Under this
 framework, the model parameters are occasionally distorted during training
 time instead of only at the end. This framework has the benefit of simplified
 training procedure and faster convergence and reduced requirement for
@@ -586,8 +630,8 @@ results in detail.
 % 4  &  diff prune global &   $99$ &       --- &       --- \\
 % 5  &  diff prune global &   $90$ &   $0.213$ &   $0.916$ \\
 % 6  &         diff prune &   $40$ &   $0.203$ &   $0.909$ \\
-% 7  &                svd &   $50$ &   $0.490$ &   $0.810$ \\
-% 8  &                svd &  $200$ &   $0.459$ &   $0.845$ \\
+% 7  &                rank reduction &   $50$ &   $0.490$ &   $0.810$ \\
+% 8  &                rank reduction &  $200$ &   $0.459$ &   $0.845$ \\
 % 9  &              prune &   $40$ &   $0.424$ &   $0.845$ \\
 % 10 &              prune &   $60$ &   $0.425$ &   $0.815$ \\
 % 11 &  diff prune global &   $99$ &   $0.230$ &   $0.901$ \\
@@ -596,8 +640,8 @@ results in detail.
 % 14 &         diff prune &   $95$ &   $0.221$ &   $0.916$ \\
 % 15 &         diff prune &   $90$ &   $0.216$ &   $0.916$ \\
 % 16 &         diff prune &   $60$ &   $0.209$ &   $0.920$ \\
-% 17 &                svd &  $100$ &   $0.515$ &   $0.823$ \\
-% 18 &                svd &  $150$ &   $0.456$ &   $0.828$ \\
+% 17 &                rank reduction &  $100$ &   $0.515$ &   $0.823$ \\
+% 18 &                rank reduction &  $150$ &   $0.456$ &   $0.828$ \\
 % 19 &         diff prune &   $80$ &   $2.533$ &   $0.491$ \\
 % 20 &         diff prune &   $90$ &       --- &       --- \\
 % 21 &  diff prune global &    $0$ &   $0.738$ &   $0.509$ \\
@@ -669,10 +713,29 @@ confirm this heterogeneity in \cref{fig:weightsbylayer}.
 
 
 Our non-difference distortions are more sensitive to the compression parameter
-(whether prune rate or SVD rank). We find it difficult to achieve performance
+(whether prune rate or rank reduction rank). We find it difficult to achieve performance
 comparable to the uncompressed BERT with a significantly compressed model. Among
 the different distortion methods, we favor pruning for its computational
-simplicity, and see no evidence that SVD achieves better compression.
+simplicity, and see no evidence that rank reduction achieves better compression.
+
+Remarkably, the fact that pruning and rank reduction incurs significant
+losses to the
+model seems to show that popular compression techniques that enjoy success
+in convolutional neural networks fail to generalize good performance to
+transformer-based language networks like BERT. We present some preliminary
+evidence in \Cref{fig:singular-values}, where we plot the singular values
+in one of the matrices in BERT. The effective rank of the matrix seems
+quite high, as the singular values are all sizable, decaying at a rate too
+slow for rank reduction techniques to be promising. This suggests that
+matrices in BERT are in fact effectively dense, unlike CNNs, where
+good compression relies on the effective sparsity of the matrices. 
+\begin{figure}[tb]
+    \centering
+    \includegraphics[width=0.5\textwidth]
+    {../figs/svd-singular-vals-distribution.png}
+    \caption{Distribution of singular values in one of BERT layers}
+    \label{fig:singular-values}
+\end{figure}
 
 % Things to say about DeepTwist
 % \begin{itemize}
